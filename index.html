@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Financeiro Completo</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .total {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: #94a3b8;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    canvas {
+      max-width: 100%;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      color: #94a3b8;
+      font-weight: normal;
+      border-bottom: 1px solid #334155;
+    }
+
+    td {
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .valor {
+      text-align: right;
+    }
+
+    .percent {
+      text-align: right;
+      color: #22c55e;
+    }
+
+    .highlight {
+      font-weight: bold;
+    }
+  </style>
+
+</head>
+<body>
+
+<div class="container">
+  <h1>📊 Dashboard Financeiro</h1>
+  <div class="total">Total mensal: <strong>R$ 4.500</strong></div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Distribuição (%)</h3>
+      <canvas id="pizza"></canvas>
+    </div>
+
+```
+<div class="card">
+  <h3>Valores em R$</h3>
+  <canvas id="barra"></canvas>
+</div>
+```
+
+  </div>
+
+  <div class="card">
+    <h3>Detalhamento completo</h3>
+
+```
+<table>
+  <tr>
+    <th>Categoria</th>
+    <th class="valor">Valor</th>
+    <th class="percent">%</th>
+  </tr>
+
+  <tr>
+    <td>📈 Investimentos</td>
+    <td class="valor">R$ 2.000</td>
+    <td class="percent">44,4%</td>
+  </tr>
+
+  <tr>
+    <td>🏠 Casa</td>
+    <td class="valor">R$ 939</td>
+    <td class="percent">20,9%</td>
+  </tr>
+
+  <tr>
+    <td>💰 Sobra</td>
+    <td class="valor">R$ 471</td>
+    <td class="percent">10,5%</td>
+  </tr>
+
+  <tr>
+    <td>❤️ Ajuda para mãe</td>
+    <td class="valor">R$ 440</td>
+    <td class="percent">9,8%</td>
+  </tr>
+
+  <tr>
+    <td>🛋️ Móveis</td>
+    <td class="valor">R$ 400</td>
+    <td class="percent">8,9%</td>
+  </tr>
+
+  <tr>
+    <td>🍽️ Alimentação extra</td>
+    <td class="valor">R$ 250</td>
+    <td class="percent">5,6%</td>
+  </tr>
+</table>
+```
+
+  </div>
+</div>
+
+<script>
+const labels = [
+  'Investimentos',
+  'Casa',
+  'Sobra',
+  'Ajuda',
+  'Móveis',
+  'Alimentação'
+];
+
+const valoresPercent = [44.4, 20.9, 10.5, 9.8, 8.9, 5.6];
+const valoresReais = [2000, 939, 471, 440, 400, 250];
+
+const cores = [
+  '#22c55e',
+  '#3b82f6',
+  '#94a3b8',
+  '#ef4444',
+  '#f97316',
+  '#eab308'
+];
+
+// Pizza
+new Chart(document.getElementById('pizza'), {
+  type: 'doughnut',
+  data: {
+    labels: labels,
+    datasets: [{
+      data: valoresPercent,
+      backgroundColor: cores,
+      borderWidth: 0
+    }]
+  },
+  plugins: [ChartDataLabels],
+  options: {
+    plugins: {
+      legend: {
+        labels: { color: "#fff" }
+      },
+      datalabels: {
+        color: "#fff",
+        formatter: (v, ctx) => {
+          return ctx.chart.data.labels[ctx.dataIndex] + "\n" + v + "%";
+        }
+      }
+    }
+  }
+});
+
+// Barras
+new Chart(document.getElementById('barra'), {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [{
+      label: 'R$',
+      data: valoresReais,
+      backgroundColor: cores
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => "R$ " + ctx.raw
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: "#fff" }
+      },
+      y: {
+        ticks: {
+          color: "#fff",
+          callback: (v) => "R$ " + v
+        }
+      }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
