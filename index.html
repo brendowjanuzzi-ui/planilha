@@ -3,34 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Wealth Dashboard 3D</title>
+    <title>Dashboard Identico - ROQT Style</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-dark: #050509;
-            --neon-blue: #00f2fe;
-            --neon-purple: #9b59b6;
+            --bg-dark: #050505;
+            --card-bg: rgba(255, 255, 255, 0.03);
             --neon-green: #00ff88;
-            --glass: rgba(255, 255, 255, 0.03);
+            --neon-blue: #00d2ff;
+            --neon-purple: #9b59b6;
             --border: rgba(255, 255, 255, 0.08);
             --text-main: #fcfcfc;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: var(--font-family);
             margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        .main-grid {
+        .main-container {
             display: grid;
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: 1fr 1.5fr;
             grid-template-rows: auto 1fr;
             gap: 20px;
             width: 95%;
@@ -38,125 +40,142 @@
             height: 90vh;
         }
 
-        /* --- SIDEBAR (CONTROLES) --- */
-        .sidebar {
-            grid-row: 1 / -1;
-            background: var(--glass);
-            backdrop-filter: blur(15px);
+        /* --- CABEÇALHO (Estilo Referência) --- */
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #aaa;
+        }
+
+        header .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        header select {
+            background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 20px;
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        /* --- PAINEL DE CONTROLE (Sidebar) --- */
+        .sidebar {
+            grid-row: 2;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             padding: 25px;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .sidebar h2 { color: var(--neon-blue); font-size: 1.2rem; margin-bottom: 5px; }
         .input-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 0.75rem; text-transform: uppercase; color: #888; }
+        label { font-size: 0.7rem; text-transform: uppercase; color: #888; }
         input {
             background: rgba(0,0,0,0.5);
             border: 1px solid var(--border);
             padding: 10px;
             border-radius: 8px;
             color: var(--neon-green);
-            font-size: 1rem;
-            outline: none;
+            font-size: 1.1rem;
+            font-weight: bold;
         }
-        input:focus { border-color: var(--neon-blue); }
         button {
-            background: linear-gradient(45deg, var(--neon-purple), var(--neon-blue));
-            color: white;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-green));
+            color: black;
             border: none;
             padding: 12px;
             border-radius: 8px;
             font-weight: bold;
-            cursor: pointer;
             text-transform: uppercase;
-            transition: 0.3s;
+            margin-top: 10px;
+            cursor: pointer;
         }
-        button:hover { box-shadow: 0 0 15px var(--neon-blue); }
 
-        /* --- STAGE (DISCO 3D) --- */
-        .stage-3d {
+        /* --- STAGE KPIs (Cards da Referência) --- */
+        .stage-kpis {
             grid-column: 2;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            perspective: 1200px;
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
-            height: 50vh;
-        }
-
-        .chart-3d-container {
-            position: relative;
-            width: 400px;
-            height: 400px;
-            transform-style: preserve-3d;
-            transform: rotateX(45deg);
-            animation: rotateOrbit 30s linear infinite;
-        }
-
-        @keyframes rotateOrbit {
-            from { transform: rotateX(50deg) rotateZ(0deg); }
-            to { transform: rotateX(50deg) rotateZ(360deg); }
-        }
-
-        /* Escala Numérica Central (Renda Passiva) */
-        .numerical-scale {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) translateZ(80px);
-            text-align: center;
-            pointer-events: none;
-        }
-        .income-val {
-            font-size: 2.8rem;
-            font-weight: 900;
-            color: white;
-            text-shadow: 0 0 20px var(--neon-purple);
-            margin: 0;
-        }
-        .income-label { font-size: 0.7rem; text-transform: uppercase; color: var(--neon-purple); letter-spacing: 2px; }
-
-        /* --- TIMELINE (GRÁFICO DE EVOLUÇÃO - ESTILO EXCEL) --- */
-        .timeline-card {
-            grid-column: 2;
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 20px;
         }
 
-        .timeline-header { display: flex; justify-content: space-between; align-items: center; }
-        .timeline-header h3 { color: var(--text-main); font-size: 1rem; }
-        .timeline-total { color: var(--neon-green); font-size: 1.2rem; font-weight: bold; }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
 
-        .timeline-chart-container {
-            height: 100%;
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
             position: relative;
         }
 
-        @media (max-width: 1000px) {
-            .main-grid { grid-template-columns: 1fr; }
-            .stage-3d { height: 40vh; }
+        .kpi-card h4 { font-size: 0.8rem; color: #888; text-transform: uppercase; }
+        .kpi-value { font-size: 1.8rem; font-weight: bold; color: white; margin: 10px 0; }
+        .kpi-trend { font-size: 0.8rem; color: var(--neon-green); }
+
+        /* Estilo da Borda Esquerda da Referência */
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 20%; height: 60%; width: 4px;
+            background: var(--neon-blue);
+            border-radius: 0 4px 4px 0;
+        }
+        .kpi-card.income::before { background: var(--neon-purple); }
+
+        /* --- GRÁFICO (Identico ao Estilo Barras da Imagem) --- */
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-container { height: 100%; position: relative; }
+
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr; grid-template-rows: auto; }
+            .kpi-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<div class="main-grid">
+<div class="main-container">
+    <header>
+        <h1>DASHBOARD OVERVIEW</h1>
+        <div class="controls">
+            <select>
+                <option>Últimos 12 Meses</option>
+            </select>
+        </div>
+    </header>
+
     <div class="sidebar">
-        <h2>Quantum Wealth</h2>
-        <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Aporte anual recorrente: R$ 30k</p>
+        <h3 style="color: var(--neon-blue); margin-bottom: 10px;">Configuração</h3>
+        <p style="font-size: 0.8rem; color: #666;">Aporte anual recorrente: R$ 30k</p>
         
         <div class="input-group">
             <label>Investimento Inicial (R$)</label>
@@ -178,39 +197,37 @@
             <input type="number" id="yearsInp" value="10">
         </div>
 
-        <button onclick="updateCalculations()">Processar Matriz</button>
+        <button onclick="updateDashboard()">Processar Matriz</button>
     </div>
 
-    <div class="stage-3d">
-        <div class="numerical-scale">
-            <p class="income-label">Renda Mensal Gerada</p>
-            <h1 class="income-val" id="incomeLabel">R$ 750</h1>
+    <div class="stage-kpis">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <h4>Patrimônio Total</h4>
+                <div class="kpi-value" id="kpiTotal">R$ 30.000</div>
+                <div class="kpi-trend">AA R$ 0,00 (+100%)</div>
+            </div>
+            <div class="kpi-card income">
+                <h4>Renda Mensal Estimada</h4>
+                <div class="kpi-value" id="kpiIncome" style="color: var(--neon-purple);">R$ 750</div>
+                <div class="kpi-trend" style="color: var(--neon-purple);">Taxa: 2.5% m.m.</div>
+            </div>
         </div>
-        <div class="chart-3d-container">
-            <canvas id="chartDoughnut3d"></canvas>
-        </div>
-    </div>
 
-    <div class="timeline-card">
-        <div class="timeline-header">
-            <h3>Visão Global: Evolução Patrimonial</h3>
-            <span class="timeline-total" id="totalLabel">Total: R$ 30.000</span>
-        </div>
-        <div class="timeline-chart-container">
-            <canvas id="chartEvolutionLine"></canvas>
+        <div class="chart-card">
+            <h4 style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Evolução Patrimonial Anual</h4>
+            <div class="chart-container">
+                <canvas id="evolutionChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    let chartDoughnut = null;
-    let chartLine = null;
-
-    // Utilitário de formatação de moeda
+    let myChart = null;
     const formatBRL = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    function updateCalculations() {
-        // Capturar dados
+    function updateDashboard() {
         const initial = parseFloat(document.getElementById('initCap').value) || 0;
         const annual = parseFloat(document.getElementById('annualInp').value) || 0;
         const rateMensal = (parseFloat(document.getElementById('rateInp').value) || 0) / 100;
@@ -218,90 +235,49 @@
 
         const months = years * 12;
         let current = initial;
-        let totalInvested = initial;
+        let labelsBar = ['Início'];
+        let dataBar = [initial];
 
-        // Arrays para o gráfico de linha (Timeline)
-        let labelsLine = ['Início'];
-        let dataLine = [initial];
-
-        // Loop de cálculo (com aporte anual de 30k)
         for (let m = 1; m <= months; m++) {
             current += current * rateMensal;
             
             // Lógica recorrente: Injeta 30k a cada 12 meses
             if (m % 12 === 0) {
                 current += annual;
-                totalInvested += annual;
                 
-                // Salvar ponto anual no gráfico de linha
-                labelsLine.push(`Ano ${m/12}`);
-                dataLine.push(current);
+                // Salvar ponto anual no gráfico de barras
+                labelsBar.push(`Ano ${m/12}`);
+                dataBar.push(current);
             }
         }
 
-        const juros = current - totalInvested;
-        const rendaFinal = current * rateMensal;
+        // Atualizar KPIs
+        document.getElementById('kpiTotal').innerText = formatBRL(current);
+        document.getElementById('kpiIncome').innerText = formatBRL(current * rateMensal);
 
-        // Atualizar Escala Numérica Central
-        document.getElementById('incomeLabel').innerText = formatBRL(rendaFinal);
-        document.getElementById('totalLabel').innerText = `PATRIMÔNIO FINAL: ${formatBRL(current)}`;
-
-        // Renderizar Gráficos
-        renderDoughnut(initial, (totalInvested - initial), juros);
-        renderLine(labelsLine, dataLine);
+        renderChart(labelsBar, dataBar);
     }
 
-    // 1. Gráfico 3D (Composição)
-    function renderDoughnut(base, aportes, juros) {
-        const ctx = document.getElementById('chartDoughnut3d').getContext('2d');
-        if (chartDoughnut) chartDoughnut.destroy();
+    // Gráfico de Barras idêntico ao estilo da Referência
+    function renderChart(labels, data) {
+        const ctx = document.getElementById('evolutionChart').getContext('2d');
+        if (myChart) myChart.destroy();
 
-        chartDoughnut = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Base', 'Aportes', 'Juros'],
-                datasets: [{
-                    data: [base, aportes, juros],
-                    backgroundColor: [ '#111', '#00f2fe', '#9b59b6' ],
-                    borderColor: 'rgba(255,255,255,0.1)',
-                    borderWidth: 5,
-                    hoverOffset: 30
-                }]
-            },
-            options: {
-                cutout: '75%',
-                plugins: { legend: { display: false } },
-                animation: { animateScale: true }
-            }
-        });
-    }
-
-    // 2. Gráfico de Linha (Evolução - Estilo Excel)
-    function renderLine(labels, data) {
-        const ctx = document.getElementById('chartEvolutionLine').getContext('2d');
-        if (chartLine) chartLine.destroy();
-
-        // Gradiente para a área preenchida
+        // Gradiente idêntico ao ROQT (Amarelo Neon para Amarelo Escuro)
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(0, 242, 254, 0.4)');
-        gradient.addColorStop(1, 'rgba(0, 242, 254, 0)');
+        gradient.addColorStop(0, 'rgba(0, 210, 255, 1)'); // Blue Neon Top
+        gradient.addColorStop(1, 'rgba(0, 210, 255, 0.2)'); // Blue Neon Bottom
 
-        chartLine = new Chart(ctx, {
-            type: 'line',
+        myChart = new Chart(ctx, {
+            type: 'bar', // Tipo de gráfico idêntico
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Patrimônio Acumulado',
+                    label: 'Patrimônio',
                     data: data,
-                    borderColor: '#00f2fe',
-                    borderWidth: 3,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#00f2fe',
-                    pointRadius: 5,
-                    pointHoverRadius: 8,
-                    fill: true,
                     backgroundColor: gradient,
-                    tension: 0.1 // Suaviza a linha como no Excel
+                    borderRadius: 6, // Cantos arredondados nas barras
+                    barThickness: 'flex'
                 }]
             },
             options: {
@@ -309,18 +285,11 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: { label: (context) => `Total: ${formatBRL(context.raw)}` }
-                    }
+                    tooltip: { callbacks: { label: (context) => formatBRL(context.raw) } }
                 },
                 scales: {
                     y: {
-                        ticks: {
-                            color: '#888',
-                            callback: (v) => 'R$ ' + (v/1000) + 'k'
-                        },
+                        ticks: { color: '#888', callback: (v) => 'R$ ' + (v/1000) + 'k' },
                         grid: { color: 'rgba(255,255,255,0.03)' }
                     },
                     x: {
@@ -332,8 +301,7 @@
         });
     }
 
-    // Carregar simulação inicial
-    window.onload = updateCalculations;
+    window.onload = updateDashboard;
 </script>
 </body>
 </html>
