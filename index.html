@@ -3,52 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Financial Matrix</title>
+    <title>3D Financial Engine</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary-glow: #00d2ff;
-            --secondary-glow: #3a7bd5;
-            --bg-dark: #0f172a;
-            --card-glass: rgba(255, 255, 255, 0.05);
-            --text-neon: #00f2fe;
+            --bg: #050505;
+            --neon-blue: #00d2ff;
+            --neon-green: #00ff88;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
         body {
-            background: radial-gradient(circle at center, #1e293b 0%, var(--bg-dark) 100%);
+            background-color: var(--bg);
             color: white;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
-            perspective: 1000px;
+            overflow: hidden;
         }
 
-        .scene {
-            width: 90%;
-            max-width: 1100px;
-            transition: transform 0.1s ease;
-        }
-
-        .card-3d {
-            background: var(--card-glass);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 30px;
-            padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        .main-container {
             display: grid;
-            grid-template-columns: 1fr 1.5fr;
+            grid-template-columns: 350px 1fr;
             gap: 40px;
-            transform-style: preserve-3d;
+            width: 90%;
+            max-width: 1200px;
+            padding: 20px;
         }
 
-        .controls {
+        /* --- PAINEL DE CONTROLE (ESTÁTICO) --- */
+        .sidebar {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            transform: translateZ(50px);
+            z-index: 10;
         }
 
         .input-group {
@@ -58,118 +55,153 @@
         }
 
         label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--text-neon);
+            letter-spacing: 1px;
+            color: #aaa;
         }
 
         input {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(0, 242, 254, 0.3);
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
             padding: 12px;
             border-radius: 10px;
-            color: white;
-            font-size: 1.1rem;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--text-neon);
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
-        }
-
-        .display-3d {
-            position: relative;
-            transform: translateZ(80px);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #chartContainer {
-            width: 100%;
-            filter: drop-shadow(0 0 20px rgba(0, 210, 255, 0.3));
-        }
-
-        .stats-overlay {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
+            color: var(--neon-blue);
+            font-size: 1rem;
             font-weight: bold;
-            background: linear-gradient(to right, #fff, var(--primary-glow));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            outline: none;
         }
 
-        .stat-label {
-            color: var(--text-neon);
-            font-size: 0.9rem;
-            letter-spacing: 3px;
-        }
+        input:focus { border-color: var(--neon-blue); }
 
         button {
-            margin-top: 10px;
-            background: linear-gradient(45deg, var(--secondary-glow), var(--primary-glow));
+            background: var(--neon-blue);
+            color: black;
             border: none;
             padding: 15px;
-            border-radius: 12px;
-            color: white;
+            border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
-            transition: 0.3s;
+            margin-top: 10px;
         }
 
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.4);
+        /* --- ESPAÇO 3D (FOCO NO GRÁFICO) --- */
+        .stage {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1200px; /* Profundidade do olhar */
         }
 
-        @media (max-width: 850px) {
-            .card-3d { grid-template-columns: 1fr; }
+        /* O "Cilindro" da Pizza */
+        .chart-3d-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            transform-style: preserve-3d;
+            transform: rotateX(45deg); /* Deita a pizza na mesa */
+            animation: rotateOrbit 20s linear infinite;
+            transition: transform 0.5s ease;
+        }
+
+        @keyframes rotateOrbit {
+            from { transform: rotateX(55deg) rotateZ(0deg); }
+            to { transform: rotateX(55deg) rotateZ(360deg); }
+        }
+
+        /* Efeito de Espessura (Sombra projetada para baixo) */
+        .chart-3d-container::after {
+            content: '';
+            position: absolute;
+            top: 10%; left: 10%; width: 80%; height: 80%;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.15;
+            transform: translateZ(-50px);
+        }
+
+        /* Escala Numérica Flutuante */
+        .numerical-scale {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateZ(100px);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .income-val {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 20px var(--neon-blue);
+            margin: 0;
+        }
+
+        .total-val {
+            font-size: 1.2rem;
+            color: var(--neon-green);
+            opacity: 0.8;
+            letter-spacing: 2px;
+        }
+
+        canvas {
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        }
+
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr; }
+            .chart-3d-container { width: 300px; height: 300px; }
         }
     </style>
 </head>
 <body>
 
-<div class="scene" id="scene">
-    <div class="card-3d" id="card">
-        <div class="controls">
-            <h2 style="margin-bottom: 10px;">Quantum Finance</h2>
-            <div class="input-group">
-                <label>Capital Base (R$)</label>
-                <input type="number" id="capBase" value="30000">
-            </div>
-            <div class="input-group">
-                <label>Injeção Anual (R$)</label>
-                <input type="number" id="annualInp" value="30000">
-            </div>
-            <div class="input-group">
-                <label>Yield Mensal (%)</label>
-                <input type="number" id="rateInp" value="2.5" step="0.1">
-            </div>
-            <div class="input-group">
-                <label>Horizonte (Anos)</label>
-                <input type="number" id="yearsInp" value="5">
-            </div>
-            <button onclick="updateVisuals()">Processar Matriz</button>
+<div class="main-container">
+    <div class="sidebar">
+        <h2 style="color: var(--neon-blue); margin-bottom: 10px;">Configuração</h2>
+        
+        <div class="input-group">
+            <label>Investimento Inicial</label>
+            <input type="number" id="initCap" value="30000">
+        </div>
+        
+        <div class="input-group">
+            <label>Aporte Todo Ano (R$)</label>
+            <input type="number" id="annualInp" value="30000">
+        </div>
+        
+        <div class="input-group">
+            <label>Rendimento Mensal (%)</label>
+            <input type="number" id="rateInp" value="2.5" step="0.1">
+        </div>
+        
+        <div class="input-group">
+            <label>Horizonte (Anos)</label>
+            <input type="number" id="yearsInp" value="10">
         </div>
 
-        <div class="display-3d">
-            <div id="chartContainer">
-                <canvas id="pizza3d"></canvas>
-            </div>
-            <div class="stats-overlay">
-                <p class="stat-label">Renda Mensal Estimada</p>
-                <div class="stat-value" id="incomeDisplay">R$ 0,00</div>
-                <p class="stat-label" style="margin-top: 10px; font-size: 0.7rem;">Patrimônio Total: <span id="totalDisplay">R$ 0</span></p>
-            </div>
+        <button onclick="calculate()">Processar Evolução</button>
+
+        <div style="margin-top: 20px; font-size: 0.8rem; line-height: 1.6; color: #888;">
+            <p>● Escala Numérica em 3D ativa</p>
+            <p>● Aporte recorrente de R$ 30k/ano</p>
+            <p>● Visualização de profundidade 45°</p>
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="numerical-scale">
+            <p style="font-size: 0.7rem; text-transform: uppercase; color: var(--neon-blue);">Renda Mensal Gerada</p>
+            <h1 class="income-val" id="incomeLabel">R$ 750</h1>
+            <p class="total-val" id="totalLabel">Total: R$ 30.000</p>
+        </div>
+
+        <div class="chart-3d-container" id="disc">
+            <canvas id="chartPizza"></canvas>
         </div>
     </div>
 </div>
@@ -177,28 +209,19 @@
 <script>
     let myChart = null;
 
-    // Efeito de Inclinação 3D conforme o mouse move
-    const scene = document.getElementById('scene');
-    const card = document.getElementById('card');
+    function calculate() {
+        const initial = parseFloat(document.getElementById('initCap').value) || 0;
+        const annual = parseFloat(document.getElementById('annualInp').value) || 0;
+        const rate = (parseFloat(document.getElementById('rateInp').value) || 0) / 100;
+        const years = parseInt(document.getElementById('yearsInp').value) || 1;
 
-    document.addEventListener('mousemove', (e) => {
-        let xAxis = (window.innerWidth / 2 - e.pageX) / 25;
-        let yAxis = (window.innerHeight / 2 - e.pageY) / 25;
-        card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
-    });
+        let current = initial;
+        let totalInvested = initial;
 
-    function updateVisuals() {
-        const base = parseFloat(document.getElementById('capBase').value);
-        const annual = parseFloat(document.getElementById('annualInp').value);
-        const rate = parseFloat(document.getElementById('rateInp').value) / 100;
-        const years = parseInt(document.getElementById('yearsInp').value);
-
-        let current = base;
-        let totalInvested = base;
-
-        for (let i = 1; i <= years * 12; i++) {
+        // Loop de crescimento com injeção anual de 30k
+        for (let m = 1; m <= years * 12; m++) {
             current += current * rate;
-            if (i % 12 === 0) {
+            if (m % 12 === 0) {
                 current += annual;
                 totalInvested += annual;
             }
@@ -207,55 +230,70 @@
         const juros = current - totalInvested;
         const rendaMensal = current * rate;
 
-        document.getElementById('incomeDisplay').innerText = rendaMensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        document.getElementById('totalDisplay').innerText = current.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        // Atualiza Escala Numérica com animação
+        animateValue("incomeLabel", rendaMensal);
+        document.getElementById('totalLabel').innerText = `PATRIMÔNIO: ${current.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}`;
 
-        renderPizza(base, (totalInvested - base), juros);
+        updateChart(initial, (totalInvested - initial), juros);
     }
 
-    function renderPizza(base, aportes, juros) {
-        const ctx = document.getElementById('pizza3d').getContext('2d');
+    function animateValue(id, value) {
+        const obj = document.getElementById(id);
+        obj.innerText = value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    }
+
+    function updateChart(base, aportes, juros) {
+        const ctx = document.getElementById('chartPizza').getContext('2d');
         
         if (myChart) myChart.destroy();
-
-        // Gradientes para efeito 3D no gráfico
-        const grad1 = ctx.createLinearGradient(0, 0, 0, 400);
-        grad1.addColorStop(0, '#00f2fe');
-        grad1.addColorStop(1, '#4facfe');
-
-        const grad2 = ctx.createLinearGradient(0, 0, 0, 400);
-        grad2.addColorStop(0, '#3a7bd5');
-        grad2.addColorStop(1, '#00d2ff');
-
-        const grad3 = ctx.createLinearGradient(0, 0, 0, 400);
-        grad3.addColorStop(0, '#f093fb');
-        grad3.addColorStop(1, '#f5576c');
 
         myChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Capital Inicial', 'Aportes Anuais', 'Juros Acumulados'],
+                labels: ['Base', 'Aportes', 'Juros'],
                 datasets: [{
                     data: [base, aportes, juros],
-                    backgroundColor: [grad2, grad1, grad3],
+                    backgroundColor: [
+                        '#1e293b',    // Escuro
+                        '#00d2ff',    // Neon Blue
+                        '#00ff88'     // Neon Green
+                    ],
                     borderColor: 'rgba(255,255,255,0.1)',
-                    borderWidth: 2,
-                    hoverOffset: 20
+                    borderWidth: 5,
+                    hoverOffset: 30
                 }]
             },
             options: {
-                cutout: '70%',
+                cutout: '75%',
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#fff', font: { size: 10, family: 'Segoe UI' } }
-                    }
+                    legend: { display: false }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
                 }
             }
         });
     }
 
-    window.onload = updateVisuals;
+    // Interatividade: Inclinar ao passar o mouse
+    const stage = document.querySelector('.stage');
+    const disc = document.getElementById('disc');
+
+    stage.addEventListener('mousemove', (e) => {
+        const rect = stage.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        
+        // Ajusta a inclinação dinamicamente além da animação
+        disc.style.transform = `rotateX(${55 + y * 20}deg) rotateZ(${x * 20}deg)`;
+    });
+
+    stage.addEventListener('mouseleave', () => {
+        disc.style.transform = `rotateX(55deg)`;
+    });
+
+    window.onload = calculate;
 </script>
 </body>
 </html>
