@@ -2,55 +2,98 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard IA Financeira</title>
+<title>SaaS Finance Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body {
-    margin:0;
-    background:#050505;
-    color:white;
-    font-family:Arial;
+:root{
+--bg:#050505;
+--card:rgba(255,255,255,0.03);
+--border:rgba(255,255,255,0.08);
+--blue:#00d2ff;
+--green:#00ff88;
+--purple:#9b59b6;
 }
 
-.container {
-    max-width:1400px;
-    margin:auto;
-    padding:20px;
+body{
+margin:0;
+background:radial-gradient(circle at top,#0a0a0a,#000);
+color:white;
+font-family:Segoe UI;
 }
 
-.grid {
-    display:grid;
-    grid-template-columns:300px 1fr;
-    gap:20px;
+.container{
+max-width:1400px;
+margin:auto;
+padding:20px;
 }
 
-.card {
-    background:rgba(255,255,255,0.03);
-    padding:20px;
-    border-radius:12px;
+/* HEADER */
+.header{
+display:flex;
+justify-content:space-between;
+margin-bottom:20px;
+color:#888;
 }
 
-.kpis {
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:10px;
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:15px;
+margin-bottom:20px;
 }
 
-.big { font-size:20px; font-weight:bold; }
-
-canvas {
-    width:100% !important;
-    height:400px !important;
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:12px;
+padding:20px;
+position:relative;
+overflow:hidden;
 }
 
-.ai-box {
-    margin-top:20px;
-    background:rgba(0,210,255,0.05);
-    border:1px solid rgba(0,210,255,0.2);
-    padding:15px;
-    border-radius:10px;
-    font-size:14px;
+/* glow */
+.card::before{
+content:'';
+position:absolute;
+left:0;
+top:20%;
+height:60%;
+width:4px;
+background:var(--blue);
+box-shadow:0 0 12px var(--blue);
+}
+
+.value{
+font-size:22px;
+font-weight:bold;
+margin-top:10px;
+}
+
+.trend{
+font-size:12px;
+color:var(--green);
+}
+
+/* CHARTS */
+.charts{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:20px;
+}
+
+canvas{
+height:300px !important;
+}
+
+/* IA */
+.ai{
+margin-top:20px;
+background:rgba(0,210,255,0.05);
+border:1px solid rgba(0,210,255,0.2);
+padding:15px;
+border-radius:10px;
 }
 </style>
 </head>
@@ -58,157 +101,126 @@ canvas {
 <body>
 
 <div class="container">
+
+<div class="header">
+<h3>DASHBOARD SaaS</h3>
+</div>
+
 <div class="grid">
-
-<div class="card">
-
-<h3>Simulação</h3>
-
-<p>Inicial</p>
-<input type="number" id="init" value="30000">
-
-<p>Aporte anual</p>
-<input type="number" id="aporte" value="30000">
-
-<p>Taxa % ao mês</p>
-<input type="number" id="taxa" value="2.5">
-
-<p>Anos</p>
-<input type="number" id="anos" value="10">
-
+<div class="card"><p>Receita</p><div class="value" id="rev"></div><div class="trend" id="revT"></div></div>
+<div class="card"><p>Lucro</p><div class="value" id="luc"></div><div class="trend" id="lucT"></div></div>
+<div class="card"><p>Clientes</p><div class="value" id="cli"></div><div class="trend">+8%</div></div>
+<div class="card"><p>Crescimento</p><div class="value" id="growth"></div><div class="trend">YoY</div></div>
 </div>
 
-<div>
-
-<div class="kpis">
-<div class="card"><p>Patrimônio</p><div class="big" id="total"></div></div>
-<div class="card"><p>Investido</p><div class="big" id="investido"></div></div>
-<div class="card"><p>Lucro</p><div class="big" id="lucro"></div></div>
-<div class="card"><p>Renda</p><div class="big" id="renda"></div></div>
+<div class="charts">
+<div class="card"><canvas id="bar"></canvas></div>
+<div class="card"><canvas id="line"></canvas></div>
 </div>
 
-<canvas id="chart"></canvas>
+<div class="ai" id="ai"></div>
 
-<div class="ai-box" id="ai"></div>
-
-</div>
-</div>
 </div>
 
 <script>
+
+// ===== STATE (importante pra SaaS)
+const state = {
+data: [12,19,10,25,22,30,28,35,40,45,50,60]
+};
+
+// ===== UTILS
 const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-let chart;
 
-function simulate(){
-let init = +initEl.value;
-let aporte = +aporteEl.value;
-let taxa = (+taxaEl.value)/100;
-let anos = +anosEl.value;
+// ===== CALCULOS
+function calc(){
 
-let meses = anos*12;
-let valor = init;
-let investido = init;
+let data = state.data;
 
-let hist = [];
+let total = data.reduce((a,b)=>a+b,0)*10000;
+let last = data[data.length-1]*10000;
+let prev = data[data.length-2]*10000;
 
-for(let i=1;i<=meses;i++){
-    valor *= (1+taxa);
-    if(i%12===0){
-        valor += aporte;
-        investido += aporte;
-    }
-    hist.push(valor);
+let growth = ((last-prev)/prev)*100;
+
+return {total,last,growth};
 }
 
-return {hist, valor, investido};
+// ===== IA SaaS
+function aiInsight(total,growth){
+
+if(growth > 10){
+return "🚀 Forte crescimento. Considere escalar aquisição de clientes.";
+}
+if(growth > 5){
+return "📈 Crescimento saudável. Otimize conversão.";
+}
+return "⚠️ Crescimento lento. Revise estratégia.";
 }
 
-function gerarIA(final, investido, taxa, anos){
+// ===== RENDER
+function render(){
 
-let lucro = final - investido;
-let perc = (lucro/final)*100;
+let {total,last,growth} = calc();
 
-let risco = taxa > 0.03 ? "alto" : taxa > 0.02 ? "moderado" : "baixo";
+rev.innerText = brl(total);
+luc.innerText = brl(total*0.3);
+cli.innerText = Math.floor(total/10000);
 
-let tempoMilhao = final >= 1000000 ? "atingido" : "não atingido";
+growthEl.innerText = growth.toFixed(1)+"%";
 
-return `
-📊 Análise Inteligente:
+revT.innerText = "+"+growth.toFixed(1)+"%";
+lucT.innerText = "+"+(growth*0.8).toFixed(1)+"%";
 
-• Sua estratégia tem risco <b>${risco}</b>  
-• ${perc.toFixed(1)}% do patrimônio vem de juros compostos  
-• Objetivo de 1M: <b>${tempoMilhao}</b>  
-• Em ${anos} anos você acumulou ${brl(final)}
+ai.innerText = aiInsight(total,growth);
 
-💡 Sugestão:
-${taxa > 0.03 
-? "Sua taxa está agressiva. Considere cenários mais conservadores."
-: "Estratégia equilibrada. Consistência será o principal fator."}
-`;
+renderCharts();
 }
 
-function run(){
+// ===== CHARTS
+let barChart, lineChart;
 
-let {hist, valor, investido} = simulate();
+function renderCharts(){
 
-// KPIs
-total.innerText = brl(valor);
-investidoEl.innerText = brl(investido);
-lucro.innerText = brl(valor - investido);
-renda.innerText = brl(valor*(+taxaEl.value/100));
+let ctx1 = document.getElementById('bar').getContext('2d');
+let ctx2 = document.getElementById('line').getContext('2d');
 
-// IA
-ai.innerHTML = gerarIA(valor, investido, +taxaEl.value/100, +anosEl.value);
+if(barChart) barChart.destroy();
+if(lineChart) lineChart.destroy();
 
-// chart fix
-if(chart) chart.destroy();
+let gradient = ctx1.createLinearGradient(0,0,0,300);
+gradient.addColorStop(0,'#00ff88');
+gradient.addColorStop(1,'rgba(0,255,136,0.1)');
 
-let ctx = document.getElementById('chart').getContext('2d');
+barChart = new Chart(ctx1,{
+type:'bar',
+data:{
+labels:state.data.map((_,i)=>i+1),
+datasets:[{data:state.data,backgroundColor:gradient,borderRadius:6}]
+},
+options:{plugins:{legend:{display:false}}}
+});
 
-chart = new Chart(ctx,{
+lineChart = new Chart(ctx2,{
 type:'line',
 data:{
-labels: hist.map((_,i)=>i+1),
+labels:state.data.map((_,i)=>i+1),
 datasets:[{
-label:'Patrimônio',
-data:hist,
+data:state.data,
 borderColor:'#00d2ff',
-backgroundColor:'rgba(0,210,255,0.1)',
-fill:true,
-tension:0.3
+tension:0.3,
+fill:false
 }]
 },
-options:{
-responsive:true,
-maintainAspectRatio:false,
-plugins:{
-legend:{labels:{color:'#aaa'}}
-},
-scales:{
-x:{ticks:{color:'#666'}},
-y:{ticks:{color:'#666'}}
-}
-}
+options:{plugins:{legend:{display:false}}}
 });
 }
 
-// eventos
-document.querySelectorAll('input').forEach(i=>{
-i.addEventListener('input',run);
-});
+// init
+const growthEl = document.getElementById('growth');
 
-const initEl = document.getElementById('init');
-const aporteEl = document.getElementById('aporte');
-const taxaEl = document.getElementById('taxa');
-const anosEl = document.getElementById('anos');
+render();
 
-const total = document.getElementById('total');
-const investidoEl = document.getElementById('investido');
-const lucro = document.getElementById('lucro');
-const renda = document.getElementById('renda');
-const ai = document.getElementById('ai');
-
-run();
 </script>
 
 </body>
