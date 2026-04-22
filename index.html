@@ -2,286 +2,262 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SaaS Finance Dashboard</title>
+<title>Apple Level Futuristic Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root{
---bg:#050505;
---card:rgba(255,255,255,0.03);
---border:rgba(255,255,255,0.08);
---blue:#00d2ff;
---green:#00ff88;
-}
-
 body{
 margin:0;
-background:radial-gradient(circle at top,#0a0a0a,#000);
+background:#050505;
+overflow:hidden;
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 color:white;
-font-family:Segoe UI;
 }
 
+/* canvas fundo */
+#bg{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:0;
+}
+
+/* luz mouse */
+.light{
+position:fixed;
+width:400px;
+height:400px;
+background:radial-gradient(circle,#00ffe0,transparent 60%);
+opacity:0.08;
+pointer-events:none;
+transform:translate(-50%,-50%);
+mix-blend-mode:screen;
+}
+
+/* dashboard */
 .container{
-max-width:1400px;
+position:relative;
+z-index:2;
+max-width:1200px;
 margin:auto;
-padding:20px;
+padding:40px;
+opacity:0;
+transform:translateY(40px);
+animation:enter 1s ease forwards;
 }
 
+@keyframes enter{
+to{opacity:1;transform:translateY(0);}
+}
+
+/* glass cards */
 .grid{
 display:grid;
-grid-template-columns:300px 1fr;
+grid-template-columns:repeat(3,1fr);
 gap:20px;
 }
 
-/* SIDEBAR */
-.sidebar{
-background:var(--card);
-padding:20px;
-border-radius:12px;
-border:1px solid var(--border);
-}
-
-.sidebar label{
-font-size:12px;
-color:#888;
-margin-top:10px;
-display:block;
-}
-
-.sidebar input{
-width:100%;
-padding:8px;
-margin-top:5px;
-margin-bottom:10px;
-background:black;
-border:1px solid var(--border);
-color:var(--green);
-border-radius:6px;
-}
-
-/* KPIs */
-.kpis{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:15px;
-margin-bottom:20px;
-}
-
 .card{
-background:var(--card);
-border:1px solid var(--border);
-border-radius:12px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+border:1px solid rgba(255,255,255,0.1);
+border-radius:20px;
 padding:20px;
+transition:0.4s;
+}
+
+.card:hover{
+transform:translateY(-10px);
+box-shadow:0 20px 50px rgba(0,255,224,0.2);
 }
 
 .value{
-font-size:20px;
+font-size:28px;
 font-weight:bold;
 margin-top:10px;
 }
 
-/* CHART */
+/* chart */
 canvas{
-height:320px !important;
+height:300px !important;
 }
 
-/* IA */
-.ai{
-margin-top:20px;
-padding:15px;
-border-radius:10px;
-background:rgba(0,210,255,0.05);
-border:1px solid rgba(0,210,255,0.2);
+/* titulo */
+h1{
+margin-bottom:20px;
 }
 </style>
 </head>
 
 <body>
 
+<canvas id="bg"></canvas>
+<div class="light" id="light"></div>
+
 <div class="container">
+
+<h1>Global SaaS Intelligence</h1>
+
 <div class="grid">
 
-<!-- SIDEBAR -->
-<div class="sidebar">
+<div class="card">
+<p>Receita Global</p>
+<div class="value" id="rev"></div>
+</div>
 
-<h3>Simulação</h3>
+<div class="card">
+<p>Lucro Líquido</p>
+<div class="value" id="luc"></div>
+</div>
 
-<label>Investimento Inicial</label>
-<input type="range" id="initRange" min="0" max="200000" step="1000" value="30000">
-<input type="text" id="initInput">
-
-<label>Aporte Anual</label>
-<input type="range" id="aporteRange" min="0" max="100000" step="1000" value="30000">
-<input type="text" id="aporteInput">
-
-<label>Taxa (% ao mês)</label>
-<input type="range" id="taxaRange" min="0.5" max="5" step="0.1" value="2.5">
-<input type="number" id="taxaInput" step="0.1">
-
-<label>Anos</label>
-<input type="range" id="anosRange" min="1" max="30" value="10">
-<input type="number" id="anosInput">
+<div class="card">
+<p>Crescimento</p>
+<div class="value" id="growth"></div>
+</div>
 
 </div>
 
-<!-- DASHBOARD -->
-<div>
-
-<div class="kpis">
-<div class="card"><p>Patrimônio</p><div class="value" id="total"></div></div>
-<div class="card"><p>Investido</p><div class="value" id="investido"></div></div>
-<div class="card"><p>Lucro</p><div class="value" id="lucro"></div></div>
-<div class="card"><p>Renda Mensal</p><div class="value" id="renda"></div></div>
-</div>
-
+<div class="card" style="margin-top:20px;">
 <canvas id="chart"></canvas>
-
-<div class="ai" id="ai"></div>
-
 </div>
-</div>
+
 </div>
 
 <script>
 
-// ===== STATE
-const state = {
-init:30000,
-aporte:30000,
-taxa:2.5,
-anos:10
-};
-
-// ===== UTILS
 const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-function formatBRLInput(value){
-return Number(value).toLocaleString('pt-BR');
+// =====================
+// ANIMAÇÃO DE NÚMEROS
+// =====================
+function animate(el, target){
+
+let current = 0;
+let step = target/60;
+
+function run(){
+current += step;
+if(current >= target){
+el.innerText = brl(target);
+return;
+}
+el.innerText = brl(current);
+requestAnimationFrame(run);
 }
 
-function parseBRL(value){
-return Number(value.replace(/\./g,'').replace(',','.')) || 0;
+run();
 }
 
-// ===== SIMULAÇÃO
-function simulate(){
+// =====================
+// DADOS
+// =====================
+let revenue = 800000;
+let growth = 14;
 
-let valor = state.init;
-let investido = state.init;
-let hist = [];
+// UI
+animate(rev,revenue);
+animate(luc,revenue*0.38);
+growth.innerText = "+"+growth+"%";
 
-for(let i=1;i<=state.anos*12;i++){
-
-valor *= (1 + state.taxa/100);
-
-if(i%12===0){
-valor += state.aporte;
-investido += state.aporte;
-}
-
-hist.push(valor);
-}
-
-return {hist, valor, investido};
-}
-
-// ===== IA
-function aiText(v, inv){
-
-let lucro = v - inv;
-let perc = (lucro/v)*100;
-
-if(perc > 60) return "🚀 Estratégia excelente. Juros compostos dominando.";
-if(perc > 40) return "📈 Boa performance. Continue consistente.";
-return "⚠️ Baixo efeito de juros. Aumente tempo ou taxa.";
-}
-
-// ===== CHART
-let chart;
-
-function renderChart(hist){
-
-if(chart) chart.destroy();
-
-let ctx = document.getElementById('chart').getContext('2d');
+// =====================
+// GRÁFICO
+// =====================
+let ctx = chart.getContext('2d');
 
 let grad = ctx.createLinearGradient(0,0,0,300);
-grad.addColorStop(0,'#00ff88');
-grad.addColorStop(1,'rgba(0,255,136,0.1)');
+grad.addColorStop(0,'#00ffe0');
+grad.addColorStop(1,'transparent');
 
-chart = new Chart(ctx,{
-type:'bar',
+new Chart(ctx,{
+type:'line',
 data:{
-labels:hist.map((_,i)=>i+1),
+labels:[1,2,3,4,5,6,7,8],
 datasets:[{
-data:hist,
+data:[10,25,20,35,30,50,45,60],
+borderColor:'#00ffe0',
 backgroundColor:grad,
-borderRadius:6
+fill:true,
+tension:0.4
 }]
 },
 options:{
-responsive:true,
-maintainAspectRatio:false,
 plugins:{legend:{display:false}},
 scales:{
-x:{ticks:{color:'#666'}},
-y:{ticks:{color:'#666'}}
+x:{ticks:{color:'#555'}},
+y:{ticks:{color:'#555'}}
 }
 }
 });
+
+// =====================
+// MOUSE LIGHT
+// =====================
+document.addEventListener('mousemove',(e)=>{
+light.style.left = e.clientX+"px";
+light.style.top = e.clientY+"px";
+});
+
+// =====================
+// PARTICLES (GLBO TECH)
+// =====================
+const canvas = document.getElementById("bg");
+const ctx2 = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let points = [];
+
+for(let i=0;i<80;i++){
+points.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+vx:(Math.random()-0.5)*0.5,
+vy:(Math.random()-0.5)*0.5
+});
 }
 
-// ===== RENDER
-function render(){
+function draw(){
 
-let {hist, valor, investido} = simulate();
+ctx2.clearRect(0,0,canvas.width,canvas.height);
 
-total.innerText = brl(valor);
-investidoEl.innerText = brl(investido);
-lucro.innerText = brl(valor - investido);
-renda.innerText = brl(valor*(state.taxa/100));
+for(let p of points){
 
-ai.innerText = aiText(valor, investido);
+p.x += p.vx;
+p.y += p.vy;
 
-renderChart(hist);
+if(p.x<0||p.x>canvas.width)p.vx*=-1;
+if(p.y<0||p.y>canvas.height)p.vy*=-1;
+
+// ponto
+ctx2.beginPath();
+ctx2.arc(p.x,p.y,2,0,Math.PI*2);
+ctx2.fillStyle="rgba(0,255,224,0.6)";
+ctx2.fill();
+
+// conexões
+for(let p2 of points){
+let dx = p.x-p2.x;
+let dy = p.y-p2.y;
+let dist = Math.sqrt(dx*dx+dy*dy);
+
+if(dist<120){
+ctx2.beginPath();
+ctx2.moveTo(p.x,p.y);
+ctx2.lineTo(p2.x,p2.y);
+ctx2.strokeStyle="rgba(0,255,224,0.08)";
+ctx2.stroke();
+}
 }
 
-// ===== SYNC INPUTS (PRO)
-function sync(range, input, key, isCurrency=true){
-
-function fromRange(){
-state[key] = +range.value;
-input.value = isCurrency ? formatBRLInput(range.value) : range.value;
-render();
 }
 
-function fromInput(){
-let val = isCurrency ? parseBRL(input.value) : +input.value;
-state[key] = val;
-range.value = val;
-input.value = isCurrency ? formatBRLInput(val) : val;
-render();
+requestAnimationFrame(draw);
 }
 
-range.addEventListener('input', fromRange);
-input.addEventListener('change', fromInput);
-
-// init
-fromRange();
-}
-
-// ===== ELEMENTOS
-const total = document.getElementById('total');
-const investidoEl = document.getElementById('investido');
-const lucro = document.getElementById('lucro');
-const renda = document.getElementById('renda');
-const ai = document.getElementById('ai');
-
-// ===== INIT SYNC
-sync(initRange, initInput, 'init');
-sync(aporteRange, aporteInput, 'aporte');
-sync(taxaRange, taxaInput, 'taxa', false);
-sync(anosRange, anosInput, 'anos', false);
+draw();
 
 </script>
 
