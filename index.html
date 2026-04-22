@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SaaS Finance Dashboard</title>
+<title>SaaS Dashboard Interativo</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -12,7 +12,6 @@
 --border:rgba(255,255,255,0.08);
 --blue:#00d2ff;
 --green:#00ff88;
---purple:#9b59b6;
 }
 
 body{
@@ -28,16 +27,31 @@ margin:auto;
 padding:20px;
 }
 
-/* HEADER */
-.header{
-display:flex;
-justify-content:space-between;
-margin-bottom:20px;
+.grid{
+display:grid;
+grid-template-columns:280px 1fr;
+gap:20px;
+}
+
+/* SIDEBAR */
+.sidebar{
+background:var(--card);
+padding:20px;
+border-radius:12px;
+border:1px solid var(--border);
+}
+
+input[type=range]{
+width:100%;
+}
+
+.label{
+font-size:12px;
 color:#888;
 }
 
-/* GRID */
-.grid{
+/* KPIs */
+.kpis{
 display:grid;
 grid-template-columns:repeat(4,1fr);
 gap:15px;
@@ -50,39 +64,15 @@ border:1px solid var(--border);
 border-radius:12px;
 padding:20px;
 position:relative;
-overflow:hidden;
-}
-
-/* glow */
-.card::before{
-content:'';
-position:absolute;
-left:0;
-top:20%;
-height:60%;
-width:4px;
-background:var(--blue);
-box-shadow:0 0 12px var(--blue);
 }
 
 .value{
-font-size:22px;
+font-size:20px;
 font-weight:bold;
 margin-top:10px;
 }
 
-.trend{
-font-size:12px;
-color:var(--green);
-}
-
-/* CHARTS */
-.charts{
-display:grid;
-grid-template-columns:2fr 1fr;
-gap:20px;
-}
-
+/* charts */
 canvas{
 height:300px !important;
 }
@@ -90,10 +80,10 @@ height:300px !important;
 /* IA */
 .ai{
 margin-top:20px;
-background:rgba(0,210,255,0.05);
-border:1px solid rgba(0,210,255,0.2);
 padding:15px;
 border-radius:10px;
+background:rgba(0,210,255,0.05);
+border:1px solid rgba(0,210,255,0.2);
 }
 </style>
 </head>
@@ -101,124 +91,145 @@ border-radius:10px;
 <body>
 
 <div class="container">
-
-<div class="header">
-<h3>DASHBOARD SaaS</h3>
-</div>
-
 <div class="grid">
-<div class="card"><p>Receita</p><div class="value" id="rev"></div><div class="trend" id="revT"></div></div>
-<div class="card"><p>Lucro</p><div class="value" id="luc"></div><div class="trend" id="lucT"></div></div>
-<div class="card"><p>Clientes</p><div class="value" id="cli"></div><div class="trend">+8%</div></div>
-<div class="card"><p>Crescimento</p><div class="value" id="growth"></div><div class="trend">YoY</div></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+<p class="label">Investimento Inicial</p>
+<input type="range" id="init" min="0" max="200000" step="5000" value="30000">
+
+<p class="label">Aporte Anual</p>
+<input type="range" id="aporte" min="0" max="100000" step="5000" value="30000">
+
+<p class="label">Taxa (% ao mês)</p>
+<input type="range" id="taxa" min="0.5" max="5" step="0.1" value="2.5">
+
+<p class="label">Anos</p>
+<input type="range" id="anos" min="1" max="30" value="10">
+
 </div>
 
-<div class="charts">
-<div class="card"><canvas id="bar"></canvas></div>
-<div class="card"><canvas id="line"></canvas></div>
+<!-- DASHBOARD -->
+<div>
+
+<div class="kpis">
+<div class="card"><p>Patrimônio</p><div class="value" id="total"></div></div>
+<div class="card"><p>Investido</p><div class="value" id="investido"></div></div>
+<div class="card"><p>Lucro</p><div class="value" id="lucro"></div></div>
+<div class="card"><p>Renda</p><div class="value" id="renda"></div></div>
 </div>
+
+<canvas id="chart"></canvas>
 
 <div class="ai" id="ai"></div>
 
 </div>
+</div>
+</div>
 
 <script>
 
-// ===== STATE (importante pra SaaS)
+// ===== STATE
 const state = {
-data: [12,19,10,25,22,30,28,35,40,45,50,60]
+init:30000,
+aporte:30000,
+taxa:2.5,
+anos:10
 };
 
 // ===== UTILS
 const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-// ===== CALCULOS
-function calc(){
+// ===== SIMULAÇÃO
+function simulate(){
 
-let data = state.data;
+let valor = state.init;
+let investido = state.init;
 
-let total = data.reduce((a,b)=>a+b,0)*10000;
-let last = data[data.length-1]*10000;
-let prev = data[data.length-2]*10000;
+let hist = [];
 
-let growth = ((last-prev)/prev)*100;
+for(let i=1;i<=state.anos*12;i++){
 
-return {total,last,growth};
+valor *= (1 + state.taxa/100);
+
+if(i%12===0){
+valor += state.aporte;
+investido += state.aporte;
 }
 
-// ===== IA SaaS
-function aiInsight(total,growth){
+hist.push(valor);
+}
 
-if(growth > 10){
-return "🚀 Forte crescimento. Considere escalar aquisição de clientes.";
+return {hist, valor, investido};
 }
-if(growth > 5){
-return "📈 Crescimento saudável. Otimize conversão.";
-}
-return "⚠️ Crescimento lento. Revise estratégia.";
+
+// ===== IA
+function aiText(v, inv){
+
+let lucro = v - inv;
+let perc = (lucro/v)*100;
+
+if(perc > 60) return "🚀 Estratégia excelente. Juros compostos dominando.";
+if(perc > 40) return "📈 Boa performance. Continue consistente.";
+return "⚠️ Baixo efeito de juros. Aumente tempo ou taxa.";
 }
 
 // ===== RENDER
+let chart;
+
 function render(){
 
-let {total,last,growth} = calc();
+let {hist, valor, investido} = simulate();
 
-rev.innerText = brl(total);
-luc.innerText = brl(total*0.3);
-cli.innerText = Math.floor(total/10000);
+total.innerText = brl(valor);
+investidoEl.innerText = brl(investido);
+lucro.innerText = brl(valor - investido);
+renda.innerText = brl(valor*(state.taxa/100));
 
-growthEl.innerText = growth.toFixed(1)+"%";
+ai.innerText = aiText(valor, investido);
 
-revT.innerText = "+"+growth.toFixed(1)+"%";
-lucT.innerText = "+"+(growth*0.8).toFixed(1)+"%";
+// chart
+if(chart) chart.destroy();
 
-ai.innerText = aiInsight(total,growth);
+let ctx = document.getElementById('chart').getContext('2d');
 
-renderCharts();
-}
+let grad = ctx.createLinearGradient(0,0,0,300);
+grad.addColorStop(0,'#00ff88');
+grad.addColorStop(1,'rgba(0,255,136,0.1)');
 
-// ===== CHARTS
-let barChart, lineChart;
-
-function renderCharts(){
-
-let ctx1 = document.getElementById('bar').getContext('2d');
-let ctx2 = document.getElementById('line').getContext('2d');
-
-if(barChart) barChart.destroy();
-if(lineChart) lineChart.destroy();
-
-let gradient = ctx1.createLinearGradient(0,0,0,300);
-gradient.addColorStop(0,'#00ff88');
-gradient.addColorStop(1,'rgba(0,255,136,0.1)');
-
-barChart = new Chart(ctx1,{
+chart = new Chart(ctx,{
 type:'bar',
 data:{
-labels:state.data.map((_,i)=>i+1),
-datasets:[{data:state.data,backgroundColor:gradient,borderRadius:6}]
+labels:hist.map((_,i)=>i+1),
+datasets:[{data:hist,backgroundColor:grad,borderRadius:6}]
 },
-options:{plugins:{legend:{display:false}}}
-});
-
-lineChart = new Chart(ctx2,{
-type:'line',
-data:{
-labels:state.data.map((_,i)=>i+1),
-datasets:[{
-data:state.data,
-borderColor:'#00d2ff',
-tension:0.3,
-fill:false
-}]
-},
-options:{plugins:{legend:{display:false}}}
+options:{
+plugins:{legend:{display:false}},
+scales:{
+x:{ticks:{color:'#666'}},
+y:{ticks:{color:'#666'}}
+}
+}
 });
 }
 
-// init
-const growthEl = document.getElementById('growth');
+// ===== EVENTOS
+document.querySelectorAll('input').forEach(input=>{
+input.addEventListener('input',e=>{
+state[e.target.id] = +e.target.value;
+render();
+});
+});
 
+// refs
+const total = document.getElementById('total');
+const investidoEl = document.getElementById('investido');
+const lucro = document.getElementById('lucro');
+const renda = document.getElementById('renda');
+const ai = document.getElementById('ai');
+
+// init
 render();
 
 </script>
