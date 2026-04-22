@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SaaS Dashboard Interativo</title>
+<title>SaaS Finance Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -29,7 +29,7 @@ padding:20px;
 
 .grid{
 display:grid;
-grid-template-columns:280px 1fr;
+grid-template-columns:300px 1fr;
 gap:20px;
 }
 
@@ -41,13 +41,22 @@ border-radius:12px;
 border:1px solid var(--border);
 }
 
-input[type=range]{
-width:100%;
-}
-
-.label{
+.sidebar label{
 font-size:12px;
 color:#888;
+margin-top:10px;
+display:block;
+}
+
+.sidebar input{
+width:100%;
+padding:8px;
+margin-top:5px;
+margin-bottom:10px;
+background:black;
+border:1px solid var(--border);
+color:var(--green);
+border-radius:6px;
 }
 
 /* KPIs */
@@ -63,7 +72,6 @@ background:var(--card);
 border:1px solid var(--border);
 border-radius:12px;
 padding:20px;
-position:relative;
 }
 
 .value{
@@ -72,9 +80,9 @@ font-weight:bold;
 margin-top:10px;
 }
 
-/* charts */
+/* CHART */
 canvas{
-height:300px !important;
+height:320px !important;
 }
 
 /* IA */
@@ -96,17 +104,23 @@ border:1px solid rgba(0,210,255,0.2);
 <!-- SIDEBAR -->
 <div class="sidebar">
 
-<p class="label">Investimento Inicial</p>
-<input type="range" id="init" min="0" max="200000" step="5000" value="30000">
+<h3>Simulação</h3>
 
-<p class="label">Aporte Anual</p>
-<input type="range" id="aporte" min="0" max="100000" step="5000" value="30000">
+<label>Investimento Inicial</label>
+<input type="range" id="initRange" min="0" max="200000" step="1000" value="30000">
+<input type="text" id="initInput">
 
-<p class="label">Taxa (% ao mês)</p>
-<input type="range" id="taxa" min="0.5" max="5" step="0.1" value="2.5">
+<label>Aporte Anual</label>
+<input type="range" id="aporteRange" min="0" max="100000" step="1000" value="30000">
+<input type="text" id="aporteInput">
 
-<p class="label">Anos</p>
-<input type="range" id="anos" min="1" max="30" value="10">
+<label>Taxa (% ao mês)</label>
+<input type="range" id="taxaRange" min="0.5" max="5" step="0.1" value="2.5">
+<input type="number" id="taxaInput" step="0.1">
+
+<label>Anos</label>
+<input type="range" id="anosRange" min="1" max="30" value="10">
+<input type="number" id="anosInput">
 
 </div>
 
@@ -117,7 +131,7 @@ border:1px solid rgba(0,210,255,0.2);
 <div class="card"><p>Patrimônio</p><div class="value" id="total"></div></div>
 <div class="card"><p>Investido</p><div class="value" id="investido"></div></div>
 <div class="card"><p>Lucro</p><div class="value" id="lucro"></div></div>
-<div class="card"><p>Renda</p><div class="value" id="renda"></div></div>
+<div class="card"><p>Renda Mensal</p><div class="value" id="renda"></div></div>
 </div>
 
 <canvas id="chart"></canvas>
@@ -141,12 +155,19 @@ anos:10
 // ===== UTILS
 const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
+function formatBRLInput(value){
+return Number(value).toLocaleString('pt-BR');
+}
+
+function parseBRL(value){
+return Number(value.replace(/\./g,'').replace(',','.')) || 0;
+}
+
 // ===== SIMULAÇÃO
 function simulate(){
 
 let valor = state.init;
 let investido = state.init;
-
 let hist = [];
 
 for(let i=1;i<=state.anos*12;i++){
@@ -175,21 +196,11 @@ if(perc > 40) return "📈 Boa performance. Continue consistente.";
 return "⚠️ Baixo efeito de juros. Aumente tempo ou taxa.";
 }
 
-// ===== RENDER
+// ===== CHART
 let chart;
 
-function render(){
+function renderChart(hist){
 
-let {hist, valor, investido} = simulate();
-
-total.innerText = brl(valor);
-investidoEl.innerText = brl(investido);
-lucro.innerText = brl(valor - investido);
-renda.innerText = brl(valor*(state.taxa/100));
-
-ai.innerText = aiText(valor, investido);
-
-// chart
 if(chart) chart.destroy();
 
 let ctx = document.getElementById('chart').getContext('2d');
@@ -202,9 +213,15 @@ chart = new Chart(ctx,{
 type:'bar',
 data:{
 labels:hist.map((_,i)=>i+1),
-datasets:[{data:hist,backgroundColor:grad,borderRadius:6}]
+datasets:[{
+data:hist,
+backgroundColor:grad,
+borderRadius:6
+}]
 },
 options:{
+responsive:true,
+maintainAspectRatio:false,
 plugins:{legend:{display:false}},
 scales:{
 x:{ticks:{color:'#666'}},
@@ -214,23 +231,57 @@ y:{ticks:{color:'#666'}}
 });
 }
 
-// ===== EVENTOS
-document.querySelectorAll('input').forEach(input=>{
-input.addEventListener('input',e=>{
-state[e.target.id] = +e.target.value;
-render();
-});
-});
+// ===== RENDER
+function render(){
 
-// refs
+let {hist, valor, investido} = simulate();
+
+total.innerText = brl(valor);
+investidoEl.innerText = brl(investido);
+lucro.innerText = brl(valor - investido);
+renda.innerText = brl(valor*(state.taxa/100));
+
+ai.innerText = aiText(valor, investido);
+
+renderChart(hist);
+}
+
+// ===== SYNC INPUTS (PRO)
+function sync(range, input, key, isCurrency=true){
+
+function fromRange(){
+state[key] = +range.value;
+input.value = isCurrency ? formatBRLInput(range.value) : range.value;
+render();
+}
+
+function fromInput(){
+let val = isCurrency ? parseBRL(input.value) : +input.value;
+state[key] = val;
+range.value = val;
+input.value = isCurrency ? formatBRLInput(val) : val;
+render();
+}
+
+range.addEventListener('input', fromRange);
+input.addEventListener('change', fromInput);
+
+// init
+fromRange();
+}
+
+// ===== ELEMENTOS
 const total = document.getElementById('total');
 const investidoEl = document.getElementById('investido');
 const lucro = document.getElementById('lucro');
 const renda = document.getElementById('renda');
 const ai = document.getElementById('ai');
 
-// init
-render();
+// ===== INIT SYNC
+sync(initRange, initInput, 'init');
+sync(aporteRange, aporteInput, 'aporte');
+sync(taxaRange, taxaInput, 'taxa', false);
+sync(anosRange, anosInput, 'anos', false);
 
 </script>
 
