@@ -3,21 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Financial Engine</title>
+    <title>Quantum Wealth Dashboard 3D</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg: #050505;
-            --neon-blue: #00d2ff;
+            --bg-dark: #050509;
+            --neon-blue: #00f2fe;
+            --neon-purple: #9b59b6;
             --neon-green: #00ff88;
             --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #fcfcfc;
         }
 
         body {
-            background-color: var(--bg);
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -26,146 +28,138 @@
             overflow: hidden;
         }
 
-        .main-container {
+        .main-grid {
             display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 40px;
-            width: 90%;
-            max-width: 1200px;
-            padding: 20px;
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            width: 95%;
+            max-width: 1300px;
+            height: 90vh;
         }
 
-        /* --- PAINEL DE CONTROLE (ESTÁTICO) --- */
+        /* --- SIDEBAR (CONTROLES) --- */
         .sidebar {
+            grid-row: 1 / -1;
             background: var(--glass);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 30px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            z-index: 10;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #aaa;
-        }
-
+        .sidebar h2 { color: var(--neon-blue); font-size: 1.2rem; margin-bottom: 5px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.75rem; text-transform: uppercase; color: #888; }
         input {
             background: rgba(0,0,0,0.5);
             border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 10px;
-            color: var(--neon-blue);
+            padding: 10px;
+            border-radius: 8px;
+            color: var(--neon-green);
             font-size: 1rem;
-            font-weight: bold;
             outline: none;
         }
-
         input:focus { border-color: var(--neon-blue); }
-
         button {
-            background: var(--neon-blue);
-            color: black;
+            background: linear-gradient(45deg, var(--neon-purple), var(--neon-blue));
+            color: white;
             border: none;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 12px;
+            border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
-            margin-top: 10px;
+            transition: 0.3s;
         }
+        button:hover { box-shadow: 0 0 15px var(--neon-blue); }
 
-        /* --- ESPAÇO 3D (FOCO NO GRÁFICO) --- */
-        .stage {
-            position: relative;
+        /* --- STAGE (DISCO 3D) --- */
+        .stage-3d {
+            grid-column: 2;
             display: flex;
             justify-content: center;
             align-items: center;
-            perspective: 1200px; /* Profundidade do olhar */
+            perspective: 1200px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            height: 50vh;
         }
 
-        /* O "Cilindro" da Pizza */
         .chart-3d-container {
             position: relative;
-            width: 500px;
-            height: 500px;
+            width: 400px;
+            height: 400px;
             transform-style: preserve-3d;
-            transform: rotateX(45deg); /* Deita a pizza na mesa */
-            animation: rotateOrbit 20s linear infinite;
-            transition: transform 0.5s ease;
+            transform: rotateX(45deg);
+            animation: rotateOrbit 30s linear infinite;
         }
 
         @keyframes rotateOrbit {
-            from { transform: rotateX(55deg) rotateZ(0deg); }
-            to { transform: rotateX(55deg) rotateZ(360deg); }
+            from { transform: rotateX(50deg) rotateZ(0deg); }
+            to { transform: rotateX(50deg) rotateZ(360deg); }
         }
 
-        /* Efeito de Espessura (Sombra projetada para baixo) */
-        .chart-3d-container::after {
-            content: '';
-            position: absolute;
-            top: 10%; left: 10%; width: 80%; height: 80%;
-            background: var(--neon-blue);
-            border-radius: 50%;
-            filter: blur(60px);
-            opacity: 0.15;
-            transform: translateZ(-50px);
-        }
-
-        /* Escala Numérica Flutuante */
+        /* Escala Numérica Central (Renda Passiva) */
         .numerical-scale {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) translateZ(100px);
+            transform: translate(-50%, -50%) translateZ(80px);
             text-align: center;
             pointer-events: none;
         }
-
         .income-val {
-            font-size: 3.5rem;
+            font-size: 2.8rem;
             font-weight: 900;
             color: white;
-            text-shadow: 0 0 20px var(--neon-blue);
+            text-shadow: 0 0 20px var(--neon-purple);
             margin: 0;
         }
+        .income-label { font-size: 0.7rem; text-transform: uppercase; color: var(--neon-purple); letter-spacing: 2px; }
 
-        .total-val {
-            font-size: 1.2rem;
-            color: var(--neon-green);
-            opacity: 0.8;
-            letter-spacing: 2px;
+        /* --- TIMELINE (GRÁFICO DE EVOLUÇÃO - ESTILO EXCEL) --- */
+        .timeline-card {
+            grid-column: 2;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
-        canvas {
-            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        .timeline-header { display: flex; justify-content: space-between; align-items: center; }
+        .timeline-header h3 { color: var(--text-main); font-size: 1rem; }
+        .timeline-total { color: var(--neon-green); font-size: 1.2rem; font-weight: bold; }
+
+        .timeline-chart-container {
+            height: 100%;
+            position: relative;
         }
 
-        @media (max-width: 900px) {
-            .main-container { grid-template-columns: 1fr; }
-            .chart-3d-container { width: 300px; height: 300px; }
+        @media (max-width: 1000px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .stage-3d { height: 40vh; }
         }
     </style>
 </head>
 <body>
 
-<div class="main-container">
+<div class="main-grid">
     <div class="sidebar">
-        <h2 style="color: var(--neon-blue); margin-bottom: 10px;">Configuração</h2>
+        <h2>Quantum Wealth</h2>
+        <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Aporte anual recorrente: R$ 30k</p>
         
         <div class="input-group">
-            <label>Investimento Inicial</label>
+            <label>Investimento Inicial (R$)</label>
             <input type="number" id="initCap" value="30000">
         </div>
         
@@ -180,84 +174,95 @@
         </div>
         
         <div class="input-group">
-            <label>Horizonte (Anos)</label>
+            <label>Quantos Anos?</label>
             <input type="number" id="yearsInp" value="10">
         </div>
 
-        <button onclick="calculate()">Processar Evolução</button>
+        <button onclick="updateCalculations()">Processar Matriz</button>
+    </div>
 
-        <div style="margin-top: 20px; font-size: 0.8rem; line-height: 1.6; color: #888;">
-            <p>● Escala Numérica em 3D ativa</p>
-            <p>● Aporte recorrente de R$ 30k/ano</p>
-            <p>● Visualização de profundidade 45°</p>
+    <div class="stage-3d">
+        <div class="numerical-scale">
+            <p class="income-label">Renda Mensal Gerada</p>
+            <h1 class="income-val" id="incomeLabel">R$ 750</h1>
+        </div>
+        <div class="chart-3d-container">
+            <canvas id="chartDoughnut3d"></canvas>
         </div>
     </div>
 
-    <div class="stage">
-        <div class="numerical-scale">
-            <p style="font-size: 0.7rem; text-transform: uppercase; color: var(--neon-blue);">Renda Mensal Gerada</p>
-            <h1 class="income-val" id="incomeLabel">R$ 750</h1>
-            <p class="total-val" id="totalLabel">Total: R$ 30.000</p>
+    <div class="timeline-card">
+        <div class="timeline-header">
+            <h3>Visão Global: Evolução Patrimonial</h3>
+            <span class="timeline-total" id="totalLabel">Total: R$ 30.000</span>
         </div>
-
-        <div class="chart-3d-container" id="disc">
-            <canvas id="chartPizza"></canvas>
+        <div class="timeline-chart-container">
+            <canvas id="chartEvolutionLine"></canvas>
         </div>
     </div>
 </div>
 
 <script>
-    let myChart = null;
+    let chartDoughnut = null;
+    let chartLine = null;
 
-    function calculate() {
+    // Utilitário de formatação de moeda
+    const formatBRL = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    function updateCalculations() {
+        // Capturar dados
         const initial = parseFloat(document.getElementById('initCap').value) || 0;
         const annual = parseFloat(document.getElementById('annualInp').value) || 0;
-        const rate = (parseFloat(document.getElementById('rateInp').value) || 0) / 100;
+        const rateMensal = (parseFloat(document.getElementById('rateInp').value) || 0) / 100;
         const years = parseInt(document.getElementById('yearsInp').value) || 1;
 
+        const months = years * 12;
         let current = initial;
         let totalInvested = initial;
 
-        // Loop de crescimento com injeção anual de 30k
-        for (let m = 1; m <= years * 12; m++) {
-            current += current * rate;
+        // Arrays para o gráfico de linha (Timeline)
+        let labelsLine = ['Início'];
+        let dataLine = [initial];
+
+        // Loop de cálculo (com aporte anual de 30k)
+        for (let m = 1; m <= months; m++) {
+            current += current * rateMensal;
+            
+            // Lógica recorrente: Injeta 30k a cada 12 meses
             if (m % 12 === 0) {
                 current += annual;
                 totalInvested += annual;
+                
+                // Salvar ponto anual no gráfico de linha
+                labelsLine.push(`Ano ${m/12}`);
+                dataLine.push(current);
             }
         }
 
         const juros = current - totalInvested;
-        const rendaMensal = current * rate;
+        const rendaFinal = current * rateMensal;
 
-        // Atualiza Escala Numérica com animação
-        animateValue("incomeLabel", rendaMensal);
-        document.getElementById('totalLabel').innerText = `PATRIMÔNIO: ${current.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}`;
+        // Atualizar Escala Numérica Central
+        document.getElementById('incomeLabel').innerText = formatBRL(rendaFinal);
+        document.getElementById('totalLabel').innerText = `PATRIMÔNIO FINAL: ${formatBRL(current)}`;
 
-        updateChart(initial, (totalInvested - initial), juros);
+        // Renderizar Gráficos
+        renderDoughnut(initial, (totalInvested - initial), juros);
+        renderLine(labelsLine, dataLine);
     }
 
-    function animateValue(id, value) {
-        const obj = document.getElementById(id);
-        obj.innerText = value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
-    }
+    // 1. Gráfico 3D (Composição)
+    function renderDoughnut(base, aportes, juros) {
+        const ctx = document.getElementById('chartDoughnut3d').getContext('2d');
+        if (chartDoughnut) chartDoughnut.destroy();
 
-    function updateChart(base, aportes, juros) {
-        const ctx = document.getElementById('chartPizza').getContext('2d');
-        
-        if (myChart) myChart.destroy();
-
-        myChart = new Chart(ctx, {
+        chartDoughnut = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['Base', 'Aportes', 'Juros'],
                 datasets: [{
                     data: [base, aportes, juros],
-                    backgroundColor: [
-                        '#1e293b',    // Escuro
-                        '#00d2ff',    // Neon Blue
-                        '#00ff88'     // Neon Green
-                    ],
+                    backgroundColor: [ '#111', '#00f2fe', '#9b59b6' ],
                     borderColor: 'rgba(255,255,255,0.1)',
                     borderWidth: 5,
                     hoverOffset: 30
@@ -265,35 +270,70 @@
             },
             options: {
                 cutout: '75%',
+                plugins: { legend: { display: false } },
+                animation: { animateScale: true }
+            }
+        });
+    }
+
+    // 2. Gráfico de Linha (Evolução - Estilo Excel)
+    function renderLine(labels, data) {
+        const ctx = document.getElementById('chartEvolutionLine').getContext('2d');
+        if (chartLine) chartLine.destroy();
+
+        // Gradiente para a área preenchida
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(0, 242, 254, 0.4)');
+        gradient.addColorStop(1, 'rgba(0, 242, 254, 0)');
+
+        chartLine = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Patrimônio Acumulado',
+                    data: data,
+                    borderColor: '#00f2fe',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#00f2fe',
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    fill: true,
+                    backgroundColor: gradient,
+                    tension: 0.1 // Suaviza a linha como no Excel
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: { label: (context) => `Total: ${formatBRL(context.raw)}` }
+                    }
                 },
-                animation: {
-                    animateScale: true,
-                    animateRotate: true
+                scales: {
+                    y: {
+                        ticks: {
+                            color: '#888',
+                            callback: (v) => 'R$ ' + (v/1000) + 'k'
+                        },
+                        grid: { color: 'rgba(255,255,255,0.03)' }
+                    },
+                    x: {
+                        ticks: { color: '#888' },
+                        grid: { display: false }
+                    }
                 }
             }
         });
     }
 
-    // Interatividade: Inclinar ao passar o mouse
-    const stage = document.querySelector('.stage');
-    const disc = document.getElementById('disc');
-
-    stage.addEventListener('mousemove', (e) => {
-        const rect = stage.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5;
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-        
-        // Ajusta a inclinação dinamicamente além da animação
-        disc.style.transform = `rotateX(${55 + y * 20}deg) rotateZ(${x * 20}deg)`;
-    });
-
-    stage.addEventListener('mouseleave', () => {
-        disc.style.transform = `rotateX(55deg)`;
-    });
-
-    window.onload = calculate;
+    // Carregar simulação inicial
+    window.onload = updateCalculations;
 </script>
 </body>
 </html>
