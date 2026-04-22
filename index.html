@@ -1,307 +1,194 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Identico - ROQT Style</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg-dark: #050505;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --neon-green: #00ff88;
-            --neon-blue: #00d2ff;
-            --neon-purple: #9b59b6;
-            --border: rgba(255, 255, 255, 0.08);
-            --text-main: #fcfcfc;
-            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+<meta charset="UTF-8">
+<title>Dashboard PRO MAX</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: var(--font-family);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+<style>
+body {
+    margin:0;
+    background:#050505;
+    color:white;
+    font-family:Arial;
+}
 
-        .main-container {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            grid-template-rows: auto 1fr;
-            gap: 20px;
-            width: 95%;
-            max-width: 1300px;
-            height: 90vh;
-        }
+.container {
+    max-width:1400px;
+    margin:auto;
+    padding:20px;
+}
 
-        /* --- CABEÇALHO (Estilo Referência) --- */
-        header {
-            grid-column: 1 / -1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 2px solid var(--border);
-        }
+.grid {
+    display:grid;
+    grid-template-columns:300px 1fr;
+    gap:20px;
+}
 
-        header h1 {
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #aaa;
-        }
+.card {
+    background:rgba(255,255,255,0.03);
+    padding:20px;
+    border-radius:12px;
+}
 
-        header .controls {
-            display: flex;
-            gap: 10px;
-        }
+h3 { margin-top:0; }
 
-        header select {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 8px;
-            border-radius: 6px;
-        }
+.slider {
+    width:100%;
+}
 
-        /* --- PAINEL DE CONTROLE (Sidebar) --- */
-        .sidebar {
-            grid-row: 2;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+.kpis {
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+}
 
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 0.7rem; text-transform: uppercase; color: #888; }
-        input {
-            background: rgba(0,0,0,0.5);
-            border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: 8px;
-            color: var(--neon-green);
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-        button {
-            background: linear-gradient(45deg, var(--neon-blue), var(--neon-green));
-            color: black;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-top: 10px;
-            cursor: pointer;
-        }
+.big { font-size:20px; font-weight:bold; }
 
-        /* --- STAGE KPIs (Cards da Referência) --- */
-        .stage-kpis {
-            grid-column: 2;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+.green { color:#00ff88; }
+.blue { color:#00d2ff; }
+.purple { color:#9b59b6; }
 
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-
-        .kpi-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            position: relative;
-        }
-
-        .kpi-card h4 { font-size: 0.8rem; color: #888; text-transform: uppercase; }
-        .kpi-value { font-size: 1.8rem; font-weight: bold; color: white; margin: 10px 0; }
-        .kpi-trend { font-size: 0.8rem; color: var(--neon-green); }
-
-        /* Estilo da Borda Esquerda da Referência */
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 20%; height: 60%; width: 4px;
-            background: var(--neon-blue);
-            border-radius: 0 4px 4px 0;
-        }
-        .kpi-card.income::before { background: var(--neon-purple); }
-
-        /* --- GRÁFICO (Identico ao Estilo Barras da Imagem) --- */
-        .chart-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chart-container { height: 100%; position: relative; }
-
-        @media (max-width: 900px) {
-            .main-container { grid-template-columns: 1fr; grid-template-rows: auto; }
-            .kpi-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+canvas { height:400px!important; }
+</style>
 </head>
+
 <body>
 
-<div class="main-container">
-    <header>
-        <h1>DASHBOARD OVERVIEW</h1>
-        <div class="controls">
-            <select>
-                <option>Últimos 12 Meses</option>
-            </select>
-        </div>
-    </header>
+<div class="container">
+<div class="grid">
 
-    <div class="sidebar">
-        <h3 style="color: var(--neon-blue); margin-bottom: 10px;">Configuração</h3>
-        <p style="font-size: 0.8rem; color: #666;">Aporte anual recorrente: R$ 30k</p>
-        
-        <div class="input-group">
-            <label>Investimento Inicial (R$)</label>
-            <input type="number" id="initCap" value="30000">
-        </div>
-        
-        <div class="input-group">
-            <label>Aporte Todo Ano (R$)</label>
-            <input type="number" id="annualInp" value="30000">
-        </div>
-        
-        <div class="input-group">
-            <label>Rendimento Mensal (%)</label>
-            <input type="number" id="rateInp" value="2.5" step="0.1">
-        </div>
-        
-        <div class="input-group">
-            <label>Quantos Anos?</label>
-            <input type="number" id="yearsInp" value="10">
-        </div>
+<div class="card">
 
-        <button onclick="updateDashboard()">Processar Matriz</button>
-    </div>
+<h3>Simulação</h3>
 
-    <div class="stage-kpis">
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <h4>Patrimônio Total</h4>
-                <div class="kpi-value" id="kpiTotal">R$ 30.000</div>
-                <div class="kpi-trend">AA R$ 0,00 (+100%)</div>
-            </div>
-            <div class="kpi-card income">
-                <h4>Renda Mensal Estimada</h4>
-                <div class="kpi-value" id="kpiIncome" style="color: var(--neon-purple);">R$ 750</div>
-                <div class="kpi-trend" style="color: var(--neon-purple);">Taxa: 2.5% m.m.</div>
-            </div>
-        </div>
+<p>Inicial: <span id="vInit"></span></p>
+<input type="range" min="0" max="200000" step="5000" value="30000" id="init">
 
-        <div class="chart-card">
-            <h4 style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Evolução Patrimonial Anual</h4>
-            <div class="chart-container">
-                <canvas id="evolutionChart"></canvas>
-            </div>
-        </div>
-    </div>
+<p>Aporte anual: <span id="vAporte"></span></p>
+<input type="range" min="0" max="100000" step="5000" value="30000" id="aporte">
+
+<p>Taxa (% a.m): <span id="vTaxa"></span></p>
+<input type="range" min="0.5" max="5" step="0.1" value="2.5" id="taxa">
+
+<p>Anos: <span id="vAnos"></span></p>
+<input type="range" min="1" max="30" value="10" id="anos">
+
+</div>
+
+<div>
+
+<div class="kpis">
+<div class="card"><p>Patrimônio</p><div class="big" id="total"></div></div>
+<div class="card"><p>CAGR</p><div class="big green" id="cagr"></div></div>
+<div class="card"><p>1M em</p><div class="big blue" id="milhao"></div></div>
+<div class="card"><p>% Juros</p><div class="big purple" id="juros"></div></div>
+<div class="card"><p>Renda</p><div class="big" id="renda"></div></div>
+</div>
+
+<canvas id="chart"></canvas>
+
+</div>
+</div>
 </div>
 
 <script>
-    let myChart = null;
-    const formatBRL = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-    function updateDashboard() {
-        const initial = parseFloat(document.getElementById('initCap').value) || 0;
-        const annual = parseFloat(document.getElementById('annualInp').value) || 0;
-        const rateMensal = (parseFloat(document.getElementById('rateInp').value) || 0) / 100;
-        const years = parseInt(document.getElementById('yearsInp').value) || 1;
+let chart;
 
-        const months = years * 12;
-        let current = initial;
-        let labelsBar = ['Início'];
-        let dataBar = [initial];
+function simulate(rateMultiplier){
 
-        for (let m = 1; m <= months; m++) {
-            current += current * rateMensal;
-            
-            // Lógica recorrente: Injeta 30k a cada 12 meses
-            if (m % 12 === 0) {
-                current += annual;
-                
-                // Salvar ponto anual no gráfico de barras
-                labelsBar.push(`Ano ${m/12}`);
-                dataBar.push(current);
-            }
-        }
+let init = +initEl.value;
+let aporte = +aporteEl.value;
+let taxa = (+taxaEl.value/100)*rateMultiplier;
+let anos = +anosEl.value;
 
-        // Atualizar KPIs
-        document.getElementById('kpiTotal').innerText = formatBRL(current);
-        document.getElementById('kpiIncome').innerText = formatBRL(current * rateMensal);
+let meses = anos*12;
+let valor = init;
 
-        renderChart(labelsBar, dataBar);
-    }
+let hist = [];
 
-    // Gráfico de Barras idêntico ao estilo da Referência
-    function renderChart(labels, data) {
-        const ctx = document.getElementById('evolutionChart').getContext('2d');
-        if (myChart) myChart.destroy();
+for(let i=1;i<=meses;i++){
 
-        // Gradiente idêntico ao ROQT (Amarelo Neon para Amarelo Escuro)
-        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(0, 210, 255, 1)'); // Blue Neon Top
-        gradient.addColorStop(1, 'rgba(0, 210, 255, 0.2)'); // Blue Neon Bottom
+    valor *= (1+taxa);
 
-        myChart = new Chart(ctx, {
-            type: 'bar', // Tipo de gráfico idêntico
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Patrimônio',
-                    data: data,
-                    backgroundColor: gradient,
-                    borderRadius: 6, // Cantos arredondados nas barras
-                    barThickness: 'flex'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: (context) => formatBRL(context.raw) } }
-                },
-                scales: {
-                    y: {
-                        ticks: { color: '#888', callback: (v) => 'R$ ' + (v/1000) + 'k' },
-                        grid: { color: 'rgba(255,255,255,0.03)' }
-                    },
-                    x: {
-                        ticks: { color: '#888' },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-    }
+    if(i%12===0) valor += aporte;
 
-    window.onload = updateDashboard;
+    hist.push(valor);
+}
+
+return hist;
+}
+
+function run(){
+
+// UI values
+vInit.innerText = brl(+initEl.value);
+vAporte.innerText = brl(+aporteEl.value);
+vTaxa.innerText = taxaEl.value + "%";
+vAnos.innerText = anosEl.value + " anos";
+
+// cenários
+let base = simulate(1);
+let conservador = simulate(0.7);
+let agressivo = simulate(1.3);
+
+let final = base[base.length-1];
+let investido = (+initEl.value + (+aporteEl.value * +anosEl.value));
+
+total.innerText = brl(final);
+
+// CAGR
+let cagrVal = Math.pow(final/investido,1/+anosEl.value)-1;
+cagr.innerText = (cagrVal*100).toFixed(1)+"%";
+
+// % juros
+juros.innerText = ((final-investido)/final*100).toFixed(1)+"%";
+
+// renda
+renda.innerText = brl(final*(+taxaEl.value/100));
+
+// milhão
+let m = base.findIndex(v=>v>=1000000);
+milhao.innerText = m>0 ? (m/12).toFixed(1)+" anos" : "—";
+
+// chart
+if(chart) chart.destroy();
+
+chart = new Chart(chartEl,{
+type:'line',
+data:{
+labels: base.map((_,i)=>i+1),
+datasets:[
+{label:'Conservador',data:conservador,borderColor:'#00ff88',tension:0.3},
+{label:'Base',data:base,borderColor:'#00d2ff',tension:0.3},
+{label:'Agressivo',data:agressivo,borderColor:'#9b59b6',tension:0.3}
+]
+},
+options:{
+plugins:{legend:{labels:{color:'#aaa'}}},
+scales:{
+x:{ticks:{color:'#666'}},
+y:{ticks:{color:'#666'}}
+}
+}
+});
+
+}
+
+// eventos tempo real
+document.querySelectorAll('input').forEach(i=>{
+i.addEventListener('input',run);
+});
+
+const initEl = document.getElementById('init');
+const aporteEl = document.getElementById('aporte');
+const taxaEl = document.getElementById('taxa');
+const anosEl = document.getElementById('anos');
+
+run();
 </script>
+
 </body>
 </html>
