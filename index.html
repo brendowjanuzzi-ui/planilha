@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard PRO MAX</title>
+<title>Dashboard IA Financeira</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -31,25 +31,27 @@ body {
     border-radius:12px;
 }
 
-h3 { margin-top:0; }
-
-.slider {
-    width:100%;
-}
-
 .kpis {
     display:grid;
-    grid-template-columns:repeat(5,1fr);
+    grid-template-columns:repeat(4,1fr);
     gap:10px;
 }
 
 .big { font-size:20px; font-weight:bold; }
 
-.green { color:#00ff88; }
-.blue { color:#00d2ff; }
-.purple { color:#9b59b6; }
+canvas {
+    width:100% !important;
+    height:400px !important;
+}
 
-canvas { height:400px!important; }
+.ai-box {
+    margin-top:20px;
+    background:rgba(0,210,255,0.05);
+    border:1px solid rgba(0,210,255,0.2);
+    padding:15px;
+    border-radius:10px;
+    font-size:14px;
+}
 </style>
 </head>
 
@@ -62,17 +64,17 @@ canvas { height:400px!important; }
 
 <h3>Simulação</h3>
 
-<p>Inicial: <span id="vInit"></span></p>
-<input type="range" min="0" max="200000" step="5000" value="30000" id="init">
+<p>Inicial</p>
+<input type="number" id="init" value="30000">
 
-<p>Aporte anual: <span id="vAporte"></span></p>
-<input type="range" min="0" max="100000" step="5000" value="30000" id="aporte">
+<p>Aporte anual</p>
+<input type="number" id="aporte" value="30000">
 
-<p>Taxa (% a.m): <span id="vTaxa"></span></p>
-<input type="range" min="0.5" max="5" step="0.1" value="2.5" id="taxa">
+<p>Taxa % ao mês</p>
+<input type="number" id="taxa" value="2.5">
 
-<p>Anos: <span id="vAnos"></span></p>
-<input type="range" min="1" max="30" value="10" id="anos">
+<p>Anos</p>
+<input type="number" id="anos" value="10">
 
 </div>
 
@@ -80,13 +82,14 @@ canvas { height:400px!important; }
 
 <div class="kpis">
 <div class="card"><p>Patrimônio</p><div class="big" id="total"></div></div>
-<div class="card"><p>CAGR</p><div class="big green" id="cagr"></div></div>
-<div class="card"><p>1M em</p><div class="big blue" id="milhao"></div></div>
-<div class="card"><p>% Juros</p><div class="big purple" id="juros"></div></div>
+<div class="card"><p>Investido</p><div class="big" id="investido"></div></div>
+<div class="card"><p>Lucro</p><div class="big" id="lucro"></div></div>
 <div class="card"><p>Renda</p><div class="big" id="renda"></div></div>
 </div>
 
 <canvas id="chart"></canvas>
+
+<div class="ai-box" id="ai"></div>
 
 </div>
 </div>
@@ -94,90 +97,102 @@ canvas { height:400px!important; }
 
 <script>
 const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-
 let chart;
 
-function simulate(rateMultiplier){
-
+function simulate(){
 let init = +initEl.value;
 let aporte = +aporteEl.value;
-let taxa = (+taxaEl.value/100)*rateMultiplier;
+let taxa = (+taxaEl.value)/100;
 let anos = +anosEl.value;
 
 let meses = anos*12;
 let valor = init;
+let investido = init;
 
 let hist = [];
 
 for(let i=1;i<=meses;i++){
-
     valor *= (1+taxa);
-
-    if(i%12===0) valor += aporte;
-
+    if(i%12===0){
+        valor += aporte;
+        investido += aporte;
+    }
     hist.push(valor);
 }
 
-return hist;
+return {hist, valor, investido};
+}
+
+function gerarIA(final, investido, taxa, anos){
+
+let lucro = final - investido;
+let perc = (lucro/final)*100;
+
+let risco = taxa > 0.03 ? "alto" : taxa > 0.02 ? "moderado" : "baixo";
+
+let tempoMilhao = final >= 1000000 ? "atingido" : "não atingido";
+
+return `
+📊 Análise Inteligente:
+
+• Sua estratégia tem risco <b>${risco}</b>  
+• ${perc.toFixed(1)}% do patrimônio vem de juros compostos  
+• Objetivo de 1M: <b>${tempoMilhao}</b>  
+• Em ${anos} anos você acumulou ${brl(final)}
+
+💡 Sugestão:
+${taxa > 0.03 
+? "Sua taxa está agressiva. Considere cenários mais conservadores."
+: "Estratégia equilibrada. Consistência será o principal fator."}
+`;
 }
 
 function run(){
 
-// UI values
-vInit.innerText = brl(+initEl.value);
-vAporte.innerText = brl(+aporteEl.value);
-vTaxa.innerText = taxaEl.value + "%";
-vAnos.innerText = anosEl.value + " anos";
+let {hist, valor, investido} = simulate();
 
-// cenários
-let base = simulate(1);
-let conservador = simulate(0.7);
-let agressivo = simulate(1.3);
+// KPIs
+total.innerText = brl(valor);
+investidoEl.innerText = brl(investido);
+lucro.innerText = brl(valor - investido);
+renda.innerText = brl(valor*(+taxaEl.value/100));
 
-let final = base[base.length-1];
-let investido = (+initEl.value + (+aporteEl.value * +anosEl.value));
+// IA
+ai.innerHTML = gerarIA(valor, investido, +taxaEl.value/100, +anosEl.value);
 
-total.innerText = brl(final);
-
-// CAGR
-let cagrVal = Math.pow(final/investido,1/+anosEl.value)-1;
-cagr.innerText = (cagrVal*100).toFixed(1)+"%";
-
-// % juros
-juros.innerText = ((final-investido)/final*100).toFixed(1)+"%";
-
-// renda
-renda.innerText = brl(final*(+taxaEl.value/100));
-
-// milhão
-let m = base.findIndex(v=>v>=1000000);
-milhao.innerText = m>0 ? (m/12).toFixed(1)+" anos" : "—";
-
-// chart
+// chart fix
 if(chart) chart.destroy();
 
-chart = new Chart(chartEl,{
+let ctx = document.getElementById('chart').getContext('2d');
+
+chart = new Chart(ctx,{
 type:'line',
 data:{
-labels: base.map((_,i)=>i+1),
-datasets:[
-{label:'Conservador',data:conservador,borderColor:'#00ff88',tension:0.3},
-{label:'Base',data:base,borderColor:'#00d2ff',tension:0.3},
-{label:'Agressivo',data:agressivo,borderColor:'#9b59b6',tension:0.3}
-]
+labels: hist.map((_,i)=>i+1),
+datasets:[{
+label:'Patrimônio',
+data:hist,
+borderColor:'#00d2ff',
+backgroundColor:'rgba(0,210,255,0.1)',
+fill:true,
+tension:0.3
+}]
 },
 options:{
-plugins:{legend:{labels:{color:'#aaa'}}},
+responsive:true,
+maintainAspectRatio:false,
+plugins:{
+legend:{labels:{color:'#aaa'}}
+},
 scales:{
 x:{ticks:{color:'#666'}},
 y:{ticks:{color:'#666'}}
 }
 }
 });
-
 }
 
-// eventos tempo real
+// eventos
 document.querySelectorAll('input').forEach(i=>{
 i.addEventListener('input',run);
 });
@@ -186,6 +201,12 @@ const initEl = document.getElementById('init');
 const aporteEl = document.getElementById('aporte');
 const taxaEl = document.getElementById('taxa');
 const anosEl = document.getElementById('anos');
+
+const total = document.getElementById('total');
+const investidoEl = document.getElementById('investido');
+const lucro = document.getElementById('lucro');
+const renda = document.getElementById('renda');
+const ai = document.getElementById('ai');
 
 run();
 </script>
