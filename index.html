@@ -3,404 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Financeiro Avançado</title>
+    <title>Simulador de Aportes Anuais Recorrentes</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #f8f9fa;
+            --bg-color: #f0f2f5;
             --card-bg: #ffffff;
-            --text-main: #2b2d42;
-            --text-muted: #8d99ae;
-            --primary: #1d3557;
-            --accent: #2a9d8f;
-            --accent-hover: #21867a;
-            --border: #edf2f4;
-            --step-color: #e9c46a;
+            --text-main: #1a1a1b;
+            --primary: #2d3436;
+            --accent: #00b894;
+            --secondary: #0984e3;
+            --border: #dfe6e9;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        header h1 {
-            color: var(--primary);
-            font-size: 2.2rem;
-            margin-bottom: 5px;
-        }
-
-        header p {
-            color: var(--text-muted);
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { color: var(--primary); font-size: 2rem; }
 
         .card {
             background: var(--card-bg);
             padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
             border: 1px solid var(--border);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .input-group { display: flex; flex-direction: column; }
+        .input-group label { font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; color: #636e72; }
+        .input-group input {
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .input-group input:focus { border-color: var(--secondary); outline: none; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
             margin-bottom: 30px;
         }
 
-        .card-title {
-            margin-bottom: 20px;
-            color: var(--primary);
-            border-bottom: 2px solid var(--bg-color);
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .stat-box {
+            padding: 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 12px;
+            text-align: center;
         }
+        .stat-box p { font-size: 0.9rem; opacity: 0.8; margin-bottom: 5px; }
+        .stat-box h2 { font-size: 1.5rem; }
+        .stat-box.highlight { background: var(--accent); }
 
-        .controls-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-group label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-
-        .input-group input, .input-group select {
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s;
-            background-color: #f8fafc;
-        }
-
-        .input-group input:focus, .input-group select:focus {
-            border-color: var(--accent);
-            background-color: #fff;
-        }
+        .chart-container { height: 450px; position: relative; }
 
         button {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent);
+            grid-column: 1 / -1;
+            padding: 15px;
+            background: var(--secondary);
             color: white;
             border: none;
             border-radius: 8px;
-            cursor: pointer;
             font-weight: bold;
             font-size: 1rem;
-            transition: background 0.2s;
+            cursor: pointer;
+            transition: opacity 0.2s;
         }
-
-        button:hover {
-            background: var(--accent-hover);
-        }
-
-        .resumo-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-            margin-top: 25px;
-        }
-
-        .resumo-box {
-            padding: 15px;
-            background-color: #f1f5f9;
-            border-radius: 8px;
-            text-align: center;
-            border-left: 4px solid var(--accent);
-        }
-
-        .resumo-box:nth-child(2) { border-left-color: #3b82f6; }
-        .resumo-box:nth-child(3) { border-left-color: var(--step-color); }
-
-        .resumo-box p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-        }
-
-        .resumo-box h4 {
-            font-size: 1.2rem;
-            color: var(--primary);
-        }
-
-        .chart-container {
-            position: relative;
-            height: 400px;
-            width: 100%;
-        }
-
-        @media (max-width: 600px) {
-            .resumo-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        button:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>📈 Simulador de Evolução Patrimonial</h1>
-        <p>Projeção de juros compostos com aportes escalonados</p>
+        <h1>Simulador de Liberdade Financeira</h1>
+        <p>Projeção com aportes anuais recorrentes de R$ 30k+</p>
     </header>
 
     <div class="card">
-        <div class="card-title">
-            <h3>Parâmetros da Simulação</h3>
-        </div>
-        
-        <div class="controls-grid">
+        <div class="controls">
             <div class="input-group">
-                <label>Capital Atual (R$)</label>
-                <input type="number" id="capitalAtual" value="30000">
+                <label>Capital Inicial (R$)</label>
+                <input type="number" id="initCap" value="30000">
             </div>
             <div class="input-group">
-                <label>Taxa de Rendimento (%)</label>
-                <input type="number" id="taxa" value="2.5" step="0.1">
+                <label>Aporte Todo Ano (R$)</label>
+                <input type="number" id="annualInp" value="30000">
             </div>
             <div class="input-group">
-                <label>Período da Taxa</label>
-                <select id="tipoTaxa">
-                    <option value="mensal">Ao Mês (a.m.)</option>
-                    <option value="anual">Ao Ano (a.a.)</option>
-                </select>
+                <label>Rendimento Mensal (%)</label>
+                <input type="number" id="rateInp" value="2.5" step="0.1">
             </div>
             <div class="input-group">
-                <label>Aporte no Ano 2 (R$)</label>
-                <input type="number" id="aporteAno2" value="30000">
+                <label>Quantos Anos?</label>
+                <input type="number" id="yearsInp" value="10">
             </div>
-            <div class="input-group">
-                <label>Tempo de Análise (Anos)</label>
-                <input type="number" id="anos" value="5">
-            </div>
+            <button onclick="updateSim()">Simular Crescimento</button>
         </div>
 
-        <button onclick="calcularSimulacao()">Atualizar Gráfico</button>
-
-        <div class="resumo-grid">
-            <div class="resumo-box">
-                <p>Total Investido</p>
-                <h4 id="resInvestido">R$ 0,00</h4>
+        <div class="stats">
+            <div class="stat-box">
+                <p>Total Investido do Bolso</p>
+                <h2 id="totalInvested">R$ 0,00</h2>
             </div>
-            <div class="resumo-box">
-                <p>Juros Acumulados</p>
-                <h4 id="resJuros">R$ 0,00</h4>
+            <div class="stat-box">
+                <p>Juros Recebidos</p>
+                <h2 id="totalInterests">R$ 0,00</h2>
             </div>
-            <div class="resumo-box">
-                <p>Montante Final</p>
-                <h4 id="resFinal">R$ 0,00</h4>
+            <div class="stat-box highlight">
+                <p>Patrimônio Final</p>
+                <h2 id="finalBalance">R$ 0,00</h2>
             </div>
         </div>
 
         <div class="chart-container">
-            <canvas id="graficoEvolucao"></canvas>
+            <canvas id="mainChart"></canvas>
         </div>
     </div>
 </div>
 
 <script>
-    let chartInstance = null;
+    let myChart = null;
 
-    // Função para formatar moeda
-    const formatarBRL = (valor) => {
-        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    };
+    const formatCurrency = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    function calcularSimulacao() {
-        // Capturar valores dos inputs
-        const capitalAtual = parseFloat(document.getElementById('capitalAtual').value) || 0;
-        const taxaInput = parseFloat(document.getElementById('taxa').value) || 0;
-        const tipoTaxa = document.getElementById('tipoTaxa').value;
-        const aporteAno2 = parseFloat(document.getElementById('aporteAno2').value) || 0;
-        const anos = parseInt(document.getElementById('anos').value) || 1;
+    function updateSim() {
+        const initial = parseFloat(document.getElementById('initCap').value) || 0;
+        const annual = parseFloat(document.getElementById('annualInp').value) || 0;
+        const monthlyRate = (parseFloat(document.getElementById('rateInp').value) || 0) / 100;
+        const years = parseInt(document.getElementById('yearsInp').value) || 1;
 
-        // Converter taxa para mensal se necessário
-        let taxaMensal = tipoTaxa === 'mensal' ? 
-            (taxaInput / 100) : 
-            (Math.pow(1 + (taxaInput / 100), 1 / 12) - 1);
+        const months = years * 12;
+        let currentBalance = initial;
+        let investedSum = initial;
 
-        const mesesTotais = anos * 12;
-        
-        let montante = capitalAtual;
-        let totalInvestido = capitalAtual;
-        
-        // Arrays para alimentar o gráfico
-        let labels = [];
-        let dadosMontante = [];
-        let dadosInvestido = [];
+        let labels = ['Início'];
+        let balanceData = [initial];
+        let investedData = [initial];
 
-        // Inserir o ponto zero no gráfico
-        labels.push('Hoje');
-        dadosMontante.push(montante);
-        dadosInvestido.push(totalInvestido);
+        for (let m = 1; m <= months; m++) {
+            // 1. O dinheiro que já está lá rende
+            currentBalance += currentBalance * monthlyRate;
 
-        // Laço principal de cálculo mês a mês
-        for (let m = 1; m <= mesesTotais; m++) {
-            
-            // Render juros sobre o saldo do mês anterior
-            montante += montante * taxaMensal;
-
-            // LÓGICA DO SALTO: No mês 13 (início do Ano 2), injeta o novo aporte
-            if (m === 13) {
-                montante += aporteAno2;
-                totalInvestido += aporteAno2;
+            // 2. Lógica Recorrente: A cada 12 meses, você injeta o novo aporte
+            if (m % 12 === 0) {
+                currentBalance += annual;
+                investedSum += annual;
             }
 
-            // Para manter o gráfico limpo, salva os dados a cada trimestre ou eventos importantes
-            // Aqui vamos salvar todos os meses para ver a curva perfeitamente
             labels.push(`Mês ${m}`);
-            dadosMontante.push(montante);
-            dadosInvestido.push(totalInvestido);
+            balanceData.push(currentBalance);
+            investedData.push(investedSum);
         }
 
-        // Atualizar os cards de resumo
-        const jurosGanhos = montante - totalInvestido;
-        document.getElementById('resInvestido').innerText = formatarBRL(totalInvestido);
-        document.getElementById('resJuros').innerText = formatarBRL(jurosGanhos);
-        document.getElementById('resFinal').innerText = formatarBRL(montante);
+        // Atualizar Painel
+        document.getElementById('totalInvested').innerText = formatCurrency(investedSum);
+        document.getElementById('totalInterests').innerText = formatCurrency(currentBalance - investedSum);
+        document.getElementById('finalBalance').innerText = formatCurrency(currentBalance);
 
-        // Renderizar Gráfico
-        atualizarGrafico(labels, dadosMontante, dadosInvestido, capitalAtual, aporteAno2);
+        renderChart(labels, balanceData, investedData);
     }
 
-    function atualizarGrafico(labels, montante, investido, capitalInicial, aporte) {
-        const ctx = document.getElementById('graficoEvolucao').getContext('2d');
+    function renderChart(labels, balances, invested) {
+        const ctx = document.getElementById('mainChart').getContext('2d');
         
-        if (chartInstance) {
-            chartInstance.destroy();
-        }
+        if (myChart) myChart.destroy();
 
-        // Plugin customizado para desenhar a anotação do aporte
-        const pluginAnotacao = {
-            id: 'pluginAnotacao',
-            afterDraw(chart) {
-                if(aporte > 0 && labels.length > 13) {
-                    const ctx = chart.ctx;
-                    const meta = chart.getDatasetMeta(0);
-                    const point = meta.data[13]; // Índice 13 corresponde ao Mês 13
-
-                    if (point) {
-                        ctx.save();
-                        ctx.beginPath();
-                        ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
-                        ctx.fillStyle = '#e9c46a'; // Cor do destaque
-                        ctx.fill();
-                        ctx.lineWidth = 2;
-                        ctx.strokeStyle = '#fff';
-                        ctx.stroke();
-
-                        ctx.fillStyle = '#1d3557';
-                        ctx.font = 'bold 12px sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('+ ' + formatarBRL(aporte), point.x, point.y - 15);
-                        ctx.restore();
-                    }
-                }
-            }
-        };
-
-        chartInstance = new Chart(ctx, {
+        myChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Montante Acumulado (R$)',
-                        data: montante,
-                        borderColor: '#2a9d8f',
-                        backgroundColor: 'rgba(42, 157, 143, 0.1)',
-                        borderWidth: 3,
-                        pointRadius: 0,
-                        pointHoverRadius: 6,
+                        label: 'Patrimônio Total',
+                        data: balances,
+                        borderColor: '#00b894',
+                        backgroundColor: 'rgba(0, 184, 148, 0.1)',
                         fill: true,
-                        tension: 0.3
+                        tension: 0.1,
+                        pointRadius: 0
                     },
                     {
-                        label: 'Capital Investido (R$)',
-                        data: investido,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
+                        label: 'Total Investido (Aportes)',
+                        data: invested,
+                        borderColor: '#0984e3',
                         borderDash: [5, 5],
-                        pointRadius: 0,
                         fill: false,
-                        stepped: true // Fica em formato de "degrau" perfeito para ver o salto
+                        pointRadius: 0,
+                        stepped: true // Cria o efeito de "escada" anual
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
                 plugins: {
                     tooltip: {
+                        mode: 'index',
+                        intersect: false,
                         callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += formatarBRL(context.parsed.y);
-                                }
-                                return label;
-                            }
+                            label: (context) => `${context.dataset.label}: ${formatCurrency(context.raw)}`
                         }
                     }
                 },
                 scales: {
                     y: {
-                        beginAtZero: false,
-                        ticks: {
-                            callback: function(value) {
-                                return 'R$ ' + (value/1000).toFixed(0) + 'k';
-                            }
-                        }
+                        ticks: { callback: (value) => 'R$ ' + (value/1000) + 'k' }
                     },
                     x: {
-                        ticks: {
-                            maxTicksLimit: 12 // Evita poluição visual no eixo X
-                        }
+                        ticks: { maxTicksLimit: 12 }
                     }
                 }
-            },
-            plugins: [pluginAnotacao]
+            }
         });
     }
 
-    // Executa o cálculo assim que a página termina de carregar
-    window.onload = calcularSimulacao;
+    window.onload = updateSim;
 </script>
 </body>
 </html>
