@@ -2,262 +2,127 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Apple Level Futuristic Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Ultra Real Earth</title>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 
 <style>
 body{
 margin:0;
-background:#050505;
 overflow:hidden;
-font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-color:white;
+background:black;
 }
 
-/* canvas fundo */
-#bg{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-z-index:0;
-}
-
-/* luz mouse */
-.light{
-position:fixed;
-width:400px;
-height:400px;
-background:radial-gradient(circle,#00ffe0,transparent 60%);
-opacity:0.08;
-pointer-events:none;
-transform:translate(-50%,-50%);
-mix-blend-mode:screen;
-}
-
-/* dashboard */
-.container{
-position:relative;
-z-index:2;
-max-width:1200px;
-margin:auto;
-padding:40px;
-opacity:0;
-transform:translateY(40px);
-animation:enter 1s ease forwards;
-}
-
-@keyframes enter{
-to{opacity:1;transform:translateY(0);}
-}
-
-/* glass cards */
-.grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:20px;
-}
-
-.card{
-background:rgba(255,255,255,0.05);
-backdrop-filter:blur(20px);
-border:1px solid rgba(255,255,255,0.1);
-border-radius:20px;
-padding:20px;
-transition:0.4s;
-}
-
-.card:hover{
-transform:translateY(-10px);
-box-shadow:0 20px 50px rgba(0,255,224,0.2);
-}
-
-.value{
-font-size:28px;
-font-weight:bold;
-margin-top:10px;
-}
-
-/* chart */
-canvas{
-height:300px !important;
-}
-
-/* titulo */
-h1{
-margin-bottom:20px;
-}
+canvas{display:block;}
 </style>
 </head>
 
 <body>
 
-<canvas id="bg"></canvas>
-<div class="light" id="light"></div>
-
-<div class="container">
-
-<h1>Global SaaS Intelligence</h1>
-
-<div class="grid">
-
-<div class="card">
-<p>Receita Global</p>
-<div class="value" id="rev"></div>
-</div>
-
-<div class="card">
-<p>Lucro Líquido</p>
-<div class="value" id="luc"></div>
-</div>
-
-<div class="card">
-<p>Crescimento</p>
-<div class="value" id="growth"></div>
-</div>
-
-</div>
-
-<div class="card" style="margin-top:20px;">
-<canvas id="chart"></canvas>
-</div>
-
-</div>
-
 <script>
 
-const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+// =====================
+// SCENE
+// =====================
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+75,
+window.innerWidth/window.innerHeight,
+0.1,
+1000
+);
+
+camera.position.z = 2.5;
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// luz principal (sol)
+const light = new THREE.PointLight(0xffffff,2);
+light.position.set(5,3,5);
+scene.add(light);
 
 // =====================
-// ANIMAÇÃO DE NÚMEROS
+// TEXTURAS (REALISM LAYERED)
 // =====================
-function animate(el, target){
+const loader = new THREE.TextureLoader();
 
-let current = 0;
-let step = target/60;
+const dayMap = loader.load("https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg");
+const nightMap = loader.load("https://threejs.org/examples/textures/planets/earth_lights_2048.png");
 
-function run(){
-current += step;
-if(current >= target){
-el.innerText = brl(target);
-return;
+// =====================
+// SHADER SIMPLIFICADO (DIA + NOITE)
+// =====================
+const earth = new THREE.Mesh(
+new THREE.SphereGeometry(1,64,64),
+new THREE.MeshStandardMaterial({
+map: dayMap
+})
+);
+
+scene.add(earth);
+
+// camada de luz noturna (glow cidades)
+const night = new THREE.Mesh(
+new THREE.SphereGeometry(1.001,64,64),
+new THREE.MeshBasicMaterial({
+map: nightMap,
+transparent:true,
+blending:THREE.AdditiveBlending
+})
+);
+
+scene.add(night);
+
+// =====================
+// NUVENS (camada extra)
+// =====================
+const cloudsTex = loader.load("https://threejs.org/examples/textures/planets/earth_clouds_1024.png");
+
+const clouds = new THREE.Mesh(
+new THREE.SphereGeometry(1.01,64,64),
+new THREE.MeshBasicMaterial({
+map: cloudsTex,
+transparent:true,
+opacity:0.4
+})
+);
+
+scene.add(clouds);
+
+// =====================
+// ANIMAÇÃO CINEMATOGRÁFICA
+// =====================
+function animate(){
+
+requestAnimationFrame(animate);
+
+// rotação principal
+earth.rotation.y += 0.0015;
+night.rotation.y += 0.0015;
+
+// nuvens mais rápidas (efeito atmosfera real)
+clouds.rotation.y += 0.0025;
+
+// leve inclinação estilo cinema
+earth.rotation.x = Math.sin(Date.now()*0.0003)*0.15;
+
+renderer.render(scene,camera);
 }
-el.innerText = brl(current);
-requestAnimationFrame(run);
-}
 
-run();
-}
+animate();
 
-// =====================
-// DADOS
-// =====================
-let revenue = 800000;
-let growth = 14;
+// resize
+window.addEventListener('resize',()=>{
 
-// UI
-animate(rev,revenue);
-animate(luc,revenue*0.38);
-growth.innerText = "+"+growth+"%";
+camera.aspect = window.innerWidth/window.innerHeight;
+camera.updateProjectionMatrix();
 
-// =====================
-// GRÁFICO
-// =====================
-let ctx = chart.getContext('2d');
+renderer.setSize(window.innerWidth,window.innerHeight);
 
-let grad = ctx.createLinearGradient(0,0,0,300);
-grad.addColorStop(0,'#00ffe0');
-grad.addColorStop(1,'transparent');
-
-new Chart(ctx,{
-type:'line',
-data:{
-labels:[1,2,3,4,5,6,7,8],
-datasets:[{
-data:[10,25,20,35,30,50,45,60],
-borderColor:'#00ffe0',
-backgroundColor:grad,
-fill:true,
-tension:0.4
-}]
-},
-options:{
-plugins:{legend:{display:false}},
-scales:{
-x:{ticks:{color:'#555'}},
-y:{ticks:{color:'#555'}}
-}
-}
 });
-
-// =====================
-// MOUSE LIGHT
-// =====================
-document.addEventListener('mousemove',(e)=>{
-light.style.left = e.clientX+"px";
-light.style.top = e.clientY+"px";
-});
-
-// =====================
-// PARTICLES (GLBO TECH)
-// =====================
-const canvas = document.getElementById("bg");
-const ctx2 = canvas.getContext("2d");
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let points = [];
-
-for(let i=0;i<80;i++){
-points.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-vx:(Math.random()-0.5)*0.5,
-vy:(Math.random()-0.5)*0.5
-});
-}
-
-function draw(){
-
-ctx2.clearRect(0,0,canvas.width,canvas.height);
-
-for(let p of points){
-
-p.x += p.vx;
-p.y += p.vy;
-
-if(p.x<0||p.x>canvas.width)p.vx*=-1;
-if(p.y<0||p.y>canvas.height)p.vy*=-1;
-
-// ponto
-ctx2.beginPath();
-ctx2.arc(p.x,p.y,2,0,Math.PI*2);
-ctx2.fillStyle="rgba(0,255,224,0.6)";
-ctx2.fill();
-
-// conexões
-for(let p2 of points){
-let dx = p.x-p2.x;
-let dy = p.y-p2.y;
-let dist = Math.sqrt(dx*dx+dy*dy);
-
-if(dist<120){
-ctx2.beginPath();
-ctx2.moveTo(p.x,p.y);
-ctx2.lineTo(p2.x,p2.y);
-ctx2.strokeStyle="rgba(0,255,224,0.08)";
-ctx2.stroke();
-}
-}
-
-}
-
-requestAnimationFrame(draw);
-}
-
-draw();
 
 </script>
 
