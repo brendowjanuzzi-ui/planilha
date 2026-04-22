@@ -1,249 +1,406 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard Financeiro Completo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro Avançado</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #2b2d42;
+            --text-muted: #8d99ae;
+            --primary: #1d3557;
+            --accent: #2a9d8f;
+            --accent-hover: #21867a;
+            --border: #edf2f4;
+            --step-color: #e9c46a;
+        }
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+        }
 
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0f172a;
-      color: #fff;
-    }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
 
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 30px;
-    }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
+        header h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
 
-    .total {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 30px;
-      color: #94a3b8;
-    }
+        header p {
+            color: var(--text-muted);
+        }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-    }
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
 
-    .card {
-      background: #1e293b;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
+        .card-title {
+            margin-bottom: 20px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    canvas {
-      max-width: 100%;
-    }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
 
-    th, td {
-      padding: 10px;
-      text-align: left;
-    }
+        .input-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
 
-    th {
-      color: #94a3b8;
-      font-weight: normal;
-      border-bottom: 1px solid #334155;
-    }
+        .input-group input, .input-group select {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+            background-color: #f8fafc;
+        }
 
-    td {
-      border-bottom: 1px solid #1e293b;
-    }
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--accent);
+            background-color: #fff;
+        }
 
-    .valor {
-      text-align: right;
-    }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
 
-    .percent {
-      text-align: right;
-      color: #22c55e;
-    }
+        button:hover {
+            background: var(--accent-hover);
+        }
 
-    .highlight {
-      font-weight: bold;
-    }
-  </style>
+        .resumo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+            margin-top: 25px;
+        }
 
+        .resumo-box {
+            padding: 15px;
+            background-color: #f1f5f9;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid var(--accent);
+        }
+
+        .resumo-box:nth-child(2) { border-left-color: #3b82f6; }
+        .resumo-box:nth-child(3) { border-left-color: var(--step-color); }
+
+        .resumo-box p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .resumo-box h4 {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .resumo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>📊 Dashboard Financeiro</h1>
-  <div class="total">Total mensal: <strong>R$ 4.500</strong></div>
+    <header>
+        <h1>📈 Simulador de Evolução Patrimonial</h1>
+        <p>Projeção de juros compostos com aportes escalonados</p>
+    </header>
 
-  <div class="grid">
     <div class="card">
-      <h3>Distribuição (%)</h3>
-      <canvas id="pizza"></canvas>
+        <div class="card-title">
+            <h3>Parâmetros da Simulação</h3>
+        </div>
+        
+        <div class="controls-grid">
+            <div class="input-group">
+                <label>Capital Atual (R$)</label>
+                <input type="number" id="capitalAtual" value="30000">
+            </div>
+            <div class="input-group">
+                <label>Taxa de Rendimento (%)</label>
+                <input type="number" id="taxa" value="2.5" step="0.1">
+            </div>
+            <div class="input-group">
+                <label>Período da Taxa</label>
+                <select id="tipoTaxa">
+                    <option value="mensal">Ao Mês (a.m.)</option>
+                    <option value="anual">Ao Ano (a.a.)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Aporte no Ano 2 (R$)</label>
+                <input type="number" id="aporteAno2" value="30000">
+            </div>
+            <div class="input-group">
+                <label>Tempo de Análise (Anos)</label>
+                <input type="number" id="anos" value="5">
+            </div>
+        </div>
+
+        <button onclick="calcularSimulacao()">Atualizar Gráfico</button>
+
+        <div class="resumo-grid">
+            <div class="resumo-box">
+                <p>Total Investido</p>
+                <h4 id="resInvestido">R$ 0,00</h4>
+            </div>
+            <div class="resumo-box">
+                <p>Juros Acumulados</p>
+                <h4 id="resJuros">R$ 0,00</h4>
+            </div>
+            <div class="resumo-box">
+                <p>Montante Final</p>
+                <h4 id="resFinal">R$ 0,00</h4>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="graficoEvolucao"></canvas>
+        </div>
     </div>
-
-```
-<div class="card">
-  <h3>Valores em R$</h3>
-  <canvas id="barra"></canvas>
-</div>
-```
-
-  </div>
-
-  <div class="card">
-    <h3>Detalhamento completo</h3>
-
-```
-<table>
-  <tr>
-    <th>Categoria</th>
-    <th class="valor">Valor</th>
-    <th class="percent">%</th>
-  </tr>
-
-  <tr>
-    <td>📈 Investimentos</td>
-    <td class="valor">R$ 2.000</td>
-    <td class="percent">44,4%</td>
-  </tr>
-
-  <tr>
-    <td>🏠 Casa</td>
-    <td class="valor">R$ 939</td>
-    <td class="percent">20,9%</td>
-  </tr>
-
-  <tr>
-    <td>💰 Sobra</td>
-    <td class="valor">R$ 471</td>
-    <td class="percent">10,5%</td>
-  </tr>
-
-  <tr>
-    <td>❤️ Ajuda para mãe</td>
-    <td class="valor">R$ 440</td>
-    <td class="percent">9,8%</td>
-  </tr>
-
-  <tr>
-    <td>🛋️ Móveis</td>
-    <td class="valor">R$ 400</td>
-    <td class="percent">8,9%</td>
-  </tr>
-
-  <tr>
-    <td>🍽️ Alimentação extra</td>
-    <td class="valor">R$ 250</td>
-    <td class="percent">5,6%</td>
-  </tr>
-</table>
-```
-
-  </div>
 </div>
 
 <script>
-const labels = [
-  'Investimentos',
-  'Casa',
-  'Sobra',
-  'Ajuda',
-  'Móveis',
-  'Alimentação'
-];
+    let chartInstance = null;
 
-const valoresPercent = [44.4, 20.9, 10.5, 9.8, 8.9, 5.6];
-const valoresReais = [2000, 939, 471, 440, 400, 250];
+    // Função para formatar moeda
+    const formatarBRL = (valor) => {
+        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    };
 
-const cores = [
-  '#22c55e',
-  '#3b82f6',
-  '#94a3b8',
-  '#ef4444',
-  '#f97316',
-  '#eab308'
-];
+    function calcularSimulacao() {
+        // Capturar valores dos inputs
+        const capitalAtual = parseFloat(document.getElementById('capitalAtual').value) || 0;
+        const taxaInput = parseFloat(document.getElementById('taxa').value) || 0;
+        const tipoTaxa = document.getElementById('tipoTaxa').value;
+        const aporteAno2 = parseFloat(document.getElementById('aporteAno2').value) || 0;
+        const anos = parseInt(document.getElementById('anos').value) || 1;
 
-// Pizza
-new Chart(document.getElementById('pizza'), {
-  type: 'doughnut',
-  data: {
-    labels: labels,
-    datasets: [{
-      data: valoresPercent,
-      backgroundColor: cores,
-      borderWidth: 0
-    }]
-  },
-  plugins: [ChartDataLabels],
-  options: {
-    plugins: {
-      legend: {
-        labels: { color: "#fff" }
-      },
-      datalabels: {
-        color: "#fff",
-        formatter: (v, ctx) => {
-          return ctx.chart.data.labels[ctx.dataIndex] + "\n" + v + "%";
+        // Converter taxa para mensal se necessário
+        let taxaMensal = tipoTaxa === 'mensal' ? 
+            (taxaInput / 100) : 
+            (Math.pow(1 + (taxaInput / 100), 1 / 12) - 1);
+
+        const mesesTotais = anos * 12;
+        
+        let montante = capitalAtual;
+        let totalInvestido = capitalAtual;
+        
+        // Arrays para alimentar o gráfico
+        let labels = [];
+        let dadosMontante = [];
+        let dadosInvestido = [];
+
+        // Inserir o ponto zero no gráfico
+        labels.push('Hoje');
+        dadosMontante.push(montante);
+        dadosInvestido.push(totalInvestido);
+
+        // Laço principal de cálculo mês a mês
+        for (let m = 1; m <= mesesTotais; m++) {
+            
+            // Render juros sobre o saldo do mês anterior
+            montante += montante * taxaMensal;
+
+            // LÓGICA DO SALTO: No mês 13 (início do Ano 2), injeta o novo aporte
+            if (m === 13) {
+                montante += aporteAno2;
+                totalInvestido += aporteAno2;
+            }
+
+            // Para manter o gráfico limpo, salva os dados a cada trimestre ou eventos importantes
+            // Aqui vamos salvar todos os meses para ver a curva perfeitamente
+            labels.push(`Mês ${m}`);
+            dadosMontante.push(montante);
+            dadosInvestido.push(totalInvestido);
         }
-      }
+
+        // Atualizar os cards de resumo
+        const jurosGanhos = montante - totalInvestido;
+        document.getElementById('resInvestido').innerText = formatarBRL(totalInvestido);
+        document.getElementById('resJuros').innerText = formatarBRL(jurosGanhos);
+        document.getElementById('resFinal').innerText = formatarBRL(montante);
+
+        // Renderizar Gráfico
+        atualizarGrafico(labels, dadosMontante, dadosInvestido, capitalAtual, aporteAno2);
     }
-  }
-});
 
-// Barras
-new Chart(document.getElementById('barra'), {
-  type: 'bar',
-  data: {
-    labels: labels,
-    datasets: [{
-      label: 'R$',
-      data: valoresReais,
-      backgroundColor: cores
-    }]
-  },
-  options: {
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => "R$ " + ctx.raw
+    function atualizarGrafico(labels, montante, investido, capitalInicial, aporte) {
+        const ctx = document.getElementById('graficoEvolucao').getContext('2d');
+        
+        if (chartInstance) {
+            chartInstance.destroy();
         }
-      }
-    },
-    scales: {
-      x: {
-        ticks: { color: "#fff" }
-      },
-      y: {
-        ticks: {
-          color: "#fff",
-          callback: (v) => "R$ " + v
-        }
-      }
+
+        // Plugin customizado para desenhar a anotação do aporte
+        const pluginAnotacao = {
+            id: 'pluginAnotacao',
+            afterDraw(chart) {
+                if(aporte > 0 && labels.length > 13) {
+                    const ctx = chart.ctx;
+                    const meta = chart.getDatasetMeta(0);
+                    const point = meta.data[13]; // Índice 13 corresponde ao Mês 13
+
+                    if (point) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#e9c46a'; // Cor do destaque
+                        ctx.fill();
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#fff';
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#1d3557';
+                        ctx.font = 'bold 12px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('+ ' + formatarBRL(aporte), point.x, point.y - 15);
+                        ctx.restore();
+                    }
+                }
+            }
+        };
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Montante Acumulado (R$)',
+                        data: montante,
+                        borderColor: '#2a9d8f',
+                        backgroundColor: 'rgba(42, 157, 143, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Capital Investido (R$)',
+                        data: investido,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false,
+                        stepped: true // Fica em formato de "degrau" perfeito para ver o salto
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += formatarBRL(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + (value/1000).toFixed(0) + 'k';
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 12 // Evita poluição visual no eixo X
+                        }
+                    }
+                }
+            },
+            plugins: [pluginAnotacao]
+        });
     }
-  }
-});
+
+    // Executa o cálculo assim que a página termina de carregar
+    window.onload = calcularSimulacao;
 </script>
-
 </body>
 </html>
